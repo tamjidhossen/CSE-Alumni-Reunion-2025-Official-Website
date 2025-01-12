@@ -23,7 +23,7 @@ const Footer = () => {
               <NavLink
                 to="/"
                 className={({ isActive }) =>
-                  isActive ? "text-red-400" : "text-gray-400 hover:text-white"
+                  isActive ? "text-red-400" : "text-gray-400 hover:text-gray-500"
                 }
               >
                 Home
@@ -33,7 +33,7 @@ const Footer = () => {
               <NavLink
                 to="/registration"
                 className={({ isActive }) =>
-                  isActive ? "text-red-400" : "text-gray-400 hover:text-white"
+                  isActive ? "text-red-400" : "text-gray-400 hover:text-gray-500"
                 }
               >
                 Registration
@@ -43,7 +43,7 @@ const Footer = () => {
               <NavLink
                 to="/announcements"
                 className={({ isActive }) =>
-                  isActive ? "text-red-400" : "text-gray-400 hover:text-white"
+                  isActive ? "text-red-400" : "text-gray-400 hover:text-gray-500"
                 }
               >
                 Announcements
@@ -53,7 +53,7 @@ const Footer = () => {
               <NavLink
                 to="/developer-info"
                 className={({ isActive }) =>
-                  isActive ? "text-red-400" : "text-gray-400 hover:text-white"
+                  isActive ? "text-red-400" : "text-gray-400 hover:text-gray-500"
                 }
               >
                 Developer Info
@@ -69,7 +69,7 @@ const Footer = () => {
             Email:{" "}
             <a
               href="mailto:info@example.com"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-gray-500"
             >
               info@example.com
             </a>
@@ -82,13 +82,13 @@ const Footer = () => {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-gray-500"
             >
               <FaFacebook size={24} />
             </a>
             <a
               href="mailto:info@example.com"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-gray-500"
             >
               <FaEnvelope size={24} />
             </a>
