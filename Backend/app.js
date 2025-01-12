@@ -16,6 +16,6 @@ app.get('/', (req, res) => {
     res.send("Hello World!");
 });
 
-app.use('/api/registration', registrationRoutes);
+app.use('/api/alumni', registrationRoutes);
 
 module.exports = app;
