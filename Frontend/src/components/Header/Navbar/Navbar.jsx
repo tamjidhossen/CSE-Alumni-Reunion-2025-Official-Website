@@ -49,12 +49,7 @@ const Navbar = () => {
           >
             Announcements
           </NavLink>
-          <div className="flex items-center">
-            <Button className="mx-1" variant="outline">
-              Login
-            </Button>
-            <ModeToggle />
-          </div>
+          <ModeToggle />
         </div>
         <div className="md:hidden">
           <span className="mx-2">
@@ -74,11 +69,6 @@ const Navbar = () => {
                     <NavLink to="/">Home</NavLink>
                     <NavLink to="/registration">Registration</NavLink>
                     <NavLink to="/announcements">Announcements</NavLink>
-                    <div>
-                      <Button className="mx-1 text-xs" variant="outline">
-                        Login
-                      </Button>
-                    </div>
                   </div>
                 </SheetDescription>
               </SheetHeader>
