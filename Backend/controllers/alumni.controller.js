@@ -1,6 +1,6 @@
 const Alumni = require('../models/alumni.model.js');
 
-const createAlumni = async (req, res) => {
+const addAlumni = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Image is required' });
@@ -46,4 +46,4 @@ const createAlumni = async (req, res) => {
     }
 };
 
-module.exports = { createAlumni };
+module.exports = { addAlumni };
