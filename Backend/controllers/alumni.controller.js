@@ -7,9 +7,15 @@ const createAlumni = async (req, res) => {
         }
         const jsonDataString = req.body.jsonData;
         const data = JSON.parse(jsonDataString);
-
-        // console.log('Parsed JSON Data:', data);
         const existingAlumni = await Alumni.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
+        const adultFee = process.env.ADULT_FEE;
+        const childFee = process.env.CHILD_FEE;
+        const childCount = data.numberOfParticipantInfo.child;
+        const adultCount = data.numberOfParticipantInfo.adult;
+        const totalFee = data.paymentInfo.totalAmount;
+        if ((childCount * childFee) + (adultCount * adultFee) != totalFee) {
+            return res.status(400).json({ success: false, message: 'Total Amount is incorrect!' });
+        }
         if (existingAlumni) {
             return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
         }

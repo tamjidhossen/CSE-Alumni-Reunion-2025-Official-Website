@@ -6,7 +6,10 @@ const storage = multer.diskStorage({
         cb(null, 'uploads/images');
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
+        const jsonDataString = req.body.jsonData;
+        const data = JSON.parse(jsonDataString);
+        const roll = data.personalInfo.roll.toString();
+        cb(null, roll + "_" + Date.now() + path.extname(file.originalname));
     }
 });
 
