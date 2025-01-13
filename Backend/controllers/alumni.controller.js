@@ -5,77 +5,37 @@ const createAlumni = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Image is required' });
         }
-        const {
-            name,
-            roll,
-            registrationNo,
-            session,
-            passingYear,
-            mobile,
-            email,
-            currentAddress,
-            currentDesignation,
-            currentOrganization,
-            prevProfessionalInfo,
-            adult,
-            child,
-            total,
-            totalAmount,
-            mobileBankingName,
-            status,
-            transactionId
-        } = req.body;
-        const existingAlumni = await Alumni.findOne({ 'paymentInfo.transactionId': transactionId });
+        const jsonDataString = req.body.jsonData;
+        const data = JSON.parse(jsonDataString);
+
+        // console.log('Parsed JSON Data:', data);
+        const existingAlumni = await Alumni.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
         if (existingAlumni) {
             return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
         }
-        const imageFileName = req.file.filename;
+        data.profilePictureInfo.image = req.file.filename;
 
         const alumni = new Alumni({
-            personalInfo: {
-                name,
-                roll,
-                registrationNo,
-                session,
-                passingYear
-            },
-            contactInfo: {
-                mobile,
-                email,
-                currentAddress
-            },
-            professionalInfo: {
-                currentDesignation,
-                currentOrganization,
-                to: 'Present'
-            },
-            prevProfessionalInfo,
-            numberOfParticipantInfo: {
-                adult,
-                child,
-                total
-            },
-            paymentInfo: {
-                totalAmount,
-                mobileBankingName,
-                status,
-                transactionId
-            },
-            profilePictureInfo: {
-                image: imageFileName
-            }
+            personalInfo: data.personalInfo,
+            contactInfo: data.contactInfo,
+            professionalInfo: data.professionalInfo,
+            prevProfessionalInfo: data.prevProfessionalInfo,
+            numberOfParticipantInfo: data.numberOfParticipantInfo,
+            paymentInfo: data.paymentInfo,
+            profilePictureInfo: data.profilePictureInfo
         });
 
         await alumni.save();
+
         res.status(201).json({
             success: true,
-            data: alumni
+            data: alumni,
         });
 
     } catch (error) {
         res.status(400).json({
             success: false,
-            message: error.message
+            message: error.message,
         });
     }
 };
