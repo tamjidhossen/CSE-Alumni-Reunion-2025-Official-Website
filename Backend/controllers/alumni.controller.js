@@ -13,6 +13,7 @@ const addAlumni = async (req, res) => {
         const childCount = data.numberOfParticipantInfo.child;
         const adultCount = data.numberOfParticipantInfo.adult;
         const totalFee = data.paymentInfo.totalAmount;
+        data.paymentInfo.status = 0;
         if ((childCount * childFee) + (adultCount * adultFee) != totalFee) {
             return res.status(400).json({ success: false, message: 'Total Amount is incorrect!' });
         }

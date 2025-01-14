@@ -19,6 +19,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/alumni', registrationRoutes);
+app.use('/api/student', registrationRoutes);
 app.use('/api/announcement', announcementRoutes);
 app.use('/api/admin', adminRoutes);
 
