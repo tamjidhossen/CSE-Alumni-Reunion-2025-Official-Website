@@ -1,33 +1,27 @@
 const Announcement = require('../models/announcement.model.js');
 
-// Create a new announcement
 const createAnnouncement = async (req, res) => {
     try {
-        const { id, title, description, link } = req.body;
-
-        // Validate input
-        if (!id || !title || !description || !link) {
-            return res.status(400).json({ message: 'All fields (id, title, description, link) are required' });
+        const { title, description, link } = req.body;
+        if (!title || !description || !link) {
+            return res.status(400).json({ success: false, message: 'All fields (title, description, link) are required' });
         }
-
-        // Create a new announcement instance
+        const count = await Announcement.countDocuments();
         const announcement = new Announcement({
-            id,
+            id: count + 1,
             title,
             description,
             link,
         });
-
-        // Save to database
         await announcement.save();
-
         res.status(201).json({
+            success: true,
             message: 'Announcement created successfully',
             announcement,
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'An error occurred while creating the announcement' });
+        res.status(500).json({ success: false, message: 'An error occurred while creating the announcement' });
     }
 };
 
