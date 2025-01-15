@@ -6,5 +6,6 @@ const adminAuth = require('../middleware/adminAuth.middleware.js')
 
 router.get('/', alumniController.getAlumni);
 router.post('/update/:id', adminAuth.authAdmin, upload.single('profilePictureInfo'), alumniController.updateAlumni);
+router.delete('/delete/:id', adminAuth.authAdmin, alumniController.deleteAlumni);
 
 module.exports = router;

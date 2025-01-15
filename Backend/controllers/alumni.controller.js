@@ -128,12 +128,11 @@ const updateAlumni = async (req, res) => {
             } catch (err) {
                 console.error('Error deleting old image:', err);
             }
-            
+
             // Save the new image
             const uploadDir = path.join(__dirname, '../uploads/images');
             newImagePath = `${updateData.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
             const filePath = path.join(uploadDir, newImagePath);
-            console.log(filePath)
             // Write the new file to the server
             fs.writeFile(filePath, req.file.buffer, async (err) => {
                 if (err) {
@@ -142,7 +141,7 @@ const updateAlumni = async (req, res) => {
 
                 // Update the image path in the alumni object
                 updateData.profilePictureInfo = { image: filePath };
-                
+
                 // Update the alumni with the new data (including the new image path)
                 const updatedAlumni = await Alumni.findByIdAndUpdate(id, updateData, { new: true });
 
@@ -167,7 +166,40 @@ const updateAlumni = async (req, res) => {
     }
 };
 
+const deleteAlumni = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Find the alumni record by ID
+        const alumni = await Alumni.findById(id);
+        if (!alumni) {
+            return res.status(404).json({ success: false, message: 'Alumni not found' });
+        }
+
+        // Check if the alumni has an associated image
+        if (alumni.profilePictureInfo.image) {
+            try {
+                const imagePath = alumni.profilePictureInfo.image;
+                fs.unlinkSync(imagePath); // Delete the image file synchronously
+            } catch (err) {
+                console.error('Error deleting image:', err);
+                return res.status(500).json({ success: false, message: 'Error deleting image' });
+            }
+        }
+
+        // Delete the alumni record from the database
+        await Alumni.findByIdAndDelete(id);
+
+        // Respond with success
+        res.json({
+            success: true,
+            message: 'Alumni deleted successfully',
+        });
+    } catch (error) {
+        console.error('Error deleting alumni:', error);
+        res.status(500).json({ success: false, message: 'Error deleting alumni', error: error.message });
+    }
+};
 
 
-
-module.exports = { addAlumni, getAlumni, updateAlumni };
+module.exports = { addAlumni, getAlumni, updateAlumni, deleteAlumni };

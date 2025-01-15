@@ -81,4 +81,84 @@ const addStudent = async (req, res) => {
     }
 };
 
-module.exports = { addStudent };
+const getStudents = async (req, res) => {
+    try {
+        const students = await Student.find();
+        res.json({ success: true, data: students });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching students', error: error.message });
+    }
+};
+
+// Update a student
+const updateStudent = async (req, res) => {
+    const { id } = req.params;
+    const updateData = JSON.parse(req.body.jsonData);
+
+    try {
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        // Handle image replacement
+        if (req.file) {
+            const uploadDir = path.join(__dirname, '../uploads/images');
+            const newImagePath = `${uploadDir}/${updateData.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+
+            // Delete the old image if it exists
+            if (student.profilePictureInfo.image) {
+                try {
+                    fs.unlinkSync(student.profilePictureInfo.image);
+                } catch (err) {
+                    console.error('Error deleting old image:', err);
+                }
+            }
+
+            // Save the new image
+            fs.writeFileSync(newImagePath, req.file.buffer);
+            updateData.profilePictureInfo = { image: newImagePath };
+        }
+
+        // Update the student record
+        const updatedStudent = await Student.findByIdAndUpdate(id, updateData, { new: true });
+        res.json({ success: true, message: 'Student updated successfully', data: updatedStudent });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error updating student', error: error.message });
+    }
+};
+
+// Delete a student
+const deleteStudent = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        // Delete the profile picture if it exists
+        if (student.profilePictureInfo.image) {
+            try {
+                fs.unlinkSync(student.profilePictureInfo.image);
+            } catch (err) {
+                console.error('Error deleting image:', err);
+            }
+        }
+
+        // Delete the student record
+        await Student.findByIdAndDelete(id);
+
+        res.json({ success: true, message: 'Student deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error deleting student', error: error.message });
+    }
+};
+
+module.exports = {
+    addStudent,
+    getStudents,
+    updateStudent,
+    deleteStudent,
+};
