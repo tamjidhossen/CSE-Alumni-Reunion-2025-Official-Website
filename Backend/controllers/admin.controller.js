@@ -1,5 +1,5 @@
 const Admin = require('../models/admin.model.js');
-
+const Alumni = require('../models/alumni.model.js');
 // Register Admin
 const registerAdmin = async (req, res) => {
     try {
@@ -84,8 +84,43 @@ const loginAdmin = async (req, res) => {
         res.status(500).json({ success: false, message: 'An error occurred while logging in the admin' });
     }
 };
+// Update alumni
+const updateAlumni = async (req, res) => {
+    const { id } = req.params;
+    const updateData = req.body;
 
+    try {
+        const updatedAlumni = await Alumni.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedAlumni) return res.status(404).json({ success: false, message: 'Alumni not found' });
+        res.json({ success: true, message: "Alumni Updated Successfully", updatedAlumni });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error updating alumni', error: error.message });
+    }
+};
+
+// Delete alumni
+// router.delete('/api/alumni/:id', async (req, res) => {
+//     const { id } = req.params;
+
+//     try {
+//         const deletedAlumni = await Alumni.findByIdAndDelete(id);
+//         if (!deletedAlumni) return res.status(404).json({ success: false, message: 'Alumni not found' });
+//         res.json({ success: true, message: 'Alumni deleted successfully', deletedAlumni });
+//     } catch (error) {
+//         res.status(500).json({ succes: false, message: 'Error deleting alumni', error: error.message });
+//     }
+// });
+// //alumni lists
+// router.get('/api/alumni', async (req, res) => {
+//     try {
+//         const alumniList = await Alumni.find();
+//         res.json(alumniList);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Error fetching alumni', error: error.message });
+//     }
+// });
 module.exports = {
     registerAdmin,
     loginAdmin,
+    updateAlumni
 };

@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
     res.send("Hello World!");
 });
 
-app.use('/api/alumni', registrationRoutes);
+app.use('/api/registration', registrationRoutes);
 app.use('/api/student', registrationRoutes);
 app.use('/api/announcement', announcementRoutes);
 app.use('/api/admin', adminRoutes);
