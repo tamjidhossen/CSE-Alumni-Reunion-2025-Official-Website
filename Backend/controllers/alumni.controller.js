@@ -80,4 +80,94 @@ const addAlumni = async (req, res) => {
     }
 };
 
-module.exports = { addAlumni };
+const getAlumni = async (req, res) => {
+    try {
+        // Fetch all alumni from the database
+        const alumni = await Alumni.find();
+
+        // If no alumni found
+        if (alumni.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No alumni found.',
+            });
+        }
+
+        // Return the alumni data
+        res.status(200).json({
+            success: true,
+            data: alumni,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            details: error.message,
+        });
+    }
+};
+
+
+
+const updateAlumni = async (req, res) => {
+    const { id } = req.params;
+    const updateData = JSON.parse(req.body.jsonData);
+    let newImagePath = '';
+    try {
+        const alumni = await Alumni.findById(id);
+        if (!alumni) {
+            return res.status(404).json({ success: false, message: 'Alumni not found' });
+        }
+
+        // Check if an image was uploaded
+        if (req.file) {
+            // If there's an existing image, delete it
+            try {
+                const oldImagePath = alumni.profilePictureInfo.image;
+                fs.unlinkSync(oldImagePath); // Synchronously delete the old image
+            } catch (err) {
+                console.error('Error deleting old image:', err);
+            }
+            
+            // Save the new image
+            const uploadDir = path.join(__dirname, '../uploads/images');
+            newImagePath = `${updateData.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            const filePath = path.join(uploadDir, newImagePath);
+            console.log(filePath)
+            // Write the new file to the server
+            fs.writeFile(filePath, req.file.buffer, async (err) => {
+                if (err) {
+                    return res.status(500).json({ success: false, message: 'Error saving new image' });
+                }
+
+                // Update the image path in the alumni object
+                updateData.profilePictureInfo = { image: filePath };
+                
+                // Update the alumni with the new data (including the new image path)
+                const updatedAlumni = await Alumni.findByIdAndUpdate(id, updateData, { new: true });
+
+                res.json({
+                    success: true,
+                    message: "Alumni updated successfully",
+                    updatedAlumni
+                });
+            });
+        } else {
+            // If no new image, proceed with just updating other data
+            const updatedAlumni = await Alumni.findByIdAndUpdate(id, updateData, { new: true });
+
+            res.json({
+                success: true,
+                message: "Alumni updated successfully",
+                updatedAlumni
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error updating alumni', error: error.message });
+    }
+};
+
+
+
+
+module.exports = { addAlumni, getAlumni, updateAlumni };

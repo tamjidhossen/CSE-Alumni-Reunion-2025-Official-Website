@@ -9,6 +9,7 @@ app.use(cors());
 const registrationRoutes = require('./routes/registration.routes.js')
 const announcementRoutes = require('./routes/announcement.routes.js')
 const adminRoutes = require('./routes/admin.routes.js')
+const alumniRoutes = require('./routes/alumni.routes.js')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
@@ -22,5 +23,6 @@ app.use('/api/registration', registrationRoutes);
 app.use('/api/student', registrationRoutes);
 app.use('/api/announcement', announcementRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/alumni', alumniRoutes);
 
 module.exports = app;

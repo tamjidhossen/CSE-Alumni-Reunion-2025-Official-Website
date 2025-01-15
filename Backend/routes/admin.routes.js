@@ -4,5 +4,4 @@ const adminController = require('../controllers/admin.controller.js');
 const adminAuth = require('../middleware/adminAuth.middleware.js')
 router.post('/register', adminAuth.authAdmin, adminController.registerAdmin);
 router.post('/login', adminController.loginAdmin);
-router.put('/update-alumni/:id', adminAuth.authAdmin, adminController.updateAlumni);
 module.exports = router;

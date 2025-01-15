@@ -84,19 +84,6 @@ const loginAdmin = async (req, res) => {
         res.status(500).json({ success: false, message: 'An error occurred while logging in the admin' });
     }
 };
-// Update alumni
-const updateAlumni = async (req, res) => {
-    const { id } = req.params;
-    const updateData = req.body;
-
-    try {
-        const updatedAlumni = await Alumni.findByIdAndUpdate(id, updateData, { new: true });
-        if (!updatedAlumni) return res.status(404).json({ success: false, message: 'Alumni not found' });
-        res.json({ success: true, message: "Alumni Updated Successfully", updatedAlumni });
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Error updating alumni', error: error.message });
-    }
-};
 
 // Delete alumni
 // router.delete('/api/alumni/:id', async (req, res) => {
@@ -121,6 +108,5 @@ const updateAlumni = async (req, res) => {
 // });
 module.exports = {
     registerAdmin,
-    loginAdmin,
-    updateAlumni
+    loginAdmin
 };
