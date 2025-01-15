@@ -200,6 +200,50 @@ const deleteAlumni = async (req, res) => {
         res.status(500).json({ success: false, message: 'Error deleting alumni', error: error.message });
     }
 };
+const paymentUpdate = async (req, res) => {
+    const { id, status } = req.params;
 
+    try {
+        // Validate status input
+        const validStatuses = [0, 1, 2];
+        if (!validStatuses.includes(Number(status))) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status value. Use 0 for Not Paid, 1 for Paid, or 2 for Rejected.'
+            });
+        }
 
-module.exports = { addAlumni, getAlumni, updateAlumni, deleteAlumni };
+        // Find the alumni by ID
+        const alumni = await Alumni.findById(id);
+        if (!alumni) {
+            return res.status(404).json({
+                success: false,
+                message: 'Alumni not found'
+            });
+        }
+
+        // Update the payment status
+        alumni.paymentInfo.status = Number(status);
+        await alumni.save();
+
+        const statusMessage = status === '1'
+            ? 'Paid'
+            : status === '0'
+                ? 'Not Paid'
+                : 'Rejected';
+
+        res.json({
+            success: true,
+            message: `Payment status updated to ${statusMessage}`,
+            data: alumni
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error updating payment status',
+            error: error.message
+        });
+    }
+};
+
+module.exports = { addAlumni, getAlumni, updateAlumni, deleteAlumni, paymentUpdate };

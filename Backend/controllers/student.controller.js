@@ -156,9 +156,56 @@ const deleteStudent = async (req, res) => {
     }
 };
 
+const paymentUpdate = async (req, res) => {
+    const { id, status } = req.params;
+
+    try {
+        // Validate status input
+        const validStatuses = [0, 1, 2];
+        if (!validStatuses.includes(Number(status))) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status value. Use 0 for Not Paid, 1 for Paid, or 2 for Rejected.'
+            });
+        }
+
+        // Find the student by ID
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        // Update the payment status
+        student.paymentInfo.status = Number(status);
+        await student.save();
+
+        const statusMessage = status === '1'
+            ? 'Paid'
+            : status === '0'
+                ? 'Not Paid'
+                : 'Rejected';
+
+        res.json({
+            success: true,
+            message: `Payment status updated to ${statusMessage}`,
+            data: student
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error updating payment status',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     addStudent,
     getStudents,
     updateStudent,
     deleteStudent,
+    paymentUpdate
 };
