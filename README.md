@@ -1,157 +1,135 @@
-# CSE-Alumni-Reunion-2025-Official-Website
 # API Documentation
 
-## Base URL
-```
-http://localhost:PORT
-```
+This document provides an overview of the API routes, their purpose, and expected behavior. The API is organized into different modules based on functionality.
 
 ---
 
-## Routes
-
-### 1. Alumni Registration
-#### POST `/alumni-registration`
-**Description:** Register a new alumni.
-
-**Request Headers:**
-- Content-Type: `multipart/form-data`
-
-**Request Body:**
-- `jsonData` (JSON string): Contains alumni data.
-- `profilePictureInfo` (File): Alumni profile picture.
-
-**Response:**
-- `201 Created`: Registration successful.
-- `400 Bad Request`: Validation error or duplicate transaction ID.
-- `500 Internal Server Error`: Server issue.
+## **Main App Routes**
+- `/api/registration` - Handles registration-related requests.
+- `/api/student` - Handles student-related requests.
+- `/api/announcement` - Handles announcements.
+- `/api/admin` - Handles admin authentication and management.
+- `/api/alumni` - Handles alumni-related requests.
+- `/api/payment` - Handles payment validation and status updates.
 
 ---
 
-### 2. Fetch All Alumni
-#### GET `/alumni`
-**Description:** Fetch all registered alumni.
+## **Admin Routes**
+### **Register Admin**
+- **Route**: `POST /api/admin/register`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Registers a new admin.
 
-**Response:**
-- `200 OK`: List of alumni.
-- `500 Internal Server Error`: Server issue.
-
----
-
-### 3. Update Alumni
-#### PUT `/alumni/:id`
-**Description:** Update alumni information and optionally update/delete their profile picture.
-
-**Request Headers:**
-- Content-Type: `multipart/form-data`
-
-**Request Body:**
-- `jsonData` (JSON string): Updated alumni data.
-- `profilePictureInfo` (File, optional): Updated profile picture.
-
-**Response:**
-- `200 OK`: Update successful.
-- `400 Bad Request`: Validation error.
-- `404 Not Found`: Alumni not found.
-- `500 Internal Server Error`: Server issue.
+### **Login Admin**
+- **Route**: `POST /api/admin/login`
+- **Authentication**: No
+- **Description**: Logs in an admin and returns an authentication token.
 
 ---
 
-### 4. Delete Alumni
-#### DELETE `/alumni/:id`
-**Description:** Delete an alumni and their profile picture.
+## **Alumni Routes**
+### **Get All Alumni**
+- **Route**: `GET /api/alumni/`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Fetches all alumni records.
 
-**Response:**
-- `200 OK`: Deletion successful.
-- `404 Not Found`: Alumni not found.
-- `500 Internal Server Error`: Server issue.
+### **Update Alumni**
+- **Route**: `POST /api/alumni/update/:id`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Updates alumni data, including profile picture.
 
----
+### **Delete Alumni**
+- **Route**: `DELETE /api/alumni/delete/:id`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Deletes an alumni record.
 
-### 5. Update Alumni Payment Status
-#### PUT `/alumni/paymentUpdate/:id/:status`
-**Description:** Update payment status for an alumni.
-
-**Path Parameters:**
-- `id` (String): Alumni ID.
-- `status` (Number): New status (0: Not Paid, 1: Paid, 3: Rejected).
-
-**Response:**
-- `200 OK`: Update successful.
-- `404 Not Found`: Alumni not found.
-- `500 Internal Server Error`: Server issue.
-
----
-
-### 6. Student Registration
-#### POST `/student-registration`
-**Description:** Register a new student.
-
-**Request Headers:**
-- Content-Type: `multipart/form-data`
-
-**Request Body:**
-- `jsonData` (JSON string): Contains student data.
-- `profilePictureInfo` (File): Student profile picture.
-
-**Response:**
-- `201 Created`: Registration successful.
-- `400 Bad Request`: Validation error or duplicate transaction ID.
-- `500 Internal Server Error`: Server issue.
+### **Update Payment Status**
+- **Route**: `PUT /api/alumni/paymentUpdate/:id/:status`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Updates the payment status for a specific alumni.
+- **Status Values**:
+  - `0`: Pending
+  - `1`: Paid
+  - `2`: Rejected
 
 ---
 
-### 7. Fetch All Students
-#### GET `/student`
-**Description:** Fetch all registered students.
+## **Announcement Routes**
+### **Create Announcement**
+- **Route**: `POST /api/announcement/add`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Adds a new announcement.
 
-**Response:**
-- `200 OK`: List of students.
-- `500 Internal Server Error`: Server issue.
+### **Get Announcements**
+- **Route**: `GET /api/announcement/get-announcement`
+- **Authentication**: No
+- **Description**: Fetches all announcements.
 
----
+### **Update Announcement**
+- **Route**: `GET /api/announcement/update/:id`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Updates a specific announcement.
 
-### 8. Update Student
-#### PUT `/student/:id`
-**Description:** Update student information and optionally update/delete their profile picture.
-
-**Request Headers:**
-- Content-Type: `multipart/form-data`
-
-**Request Body:**
-- `jsonData` (JSON string): Updated student data.
-- `profilePictureInfo` (File, optional): Updated profile picture.
-
-**Response:**
-- `200 OK`: Update successful.
-- `400 Bad Request`: Validation error.
-- `404 Not Found`: Student not found.
-- `500 Internal Server Error`: Server issue.
+### **Delete Announcement**
+- **Route**: `DELETE /api/announcement/delete/:id`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Deletes a specific announcement.
 
 ---
 
-### 9. Delete Student
-#### DELETE `/student/:id`
-**Description:** Delete a student and their profile picture.
+## **Payment Routes**
+### **Check Payment**
+- **Route**: `GET /api/payment/check/:roll/:reg/:transactionId`
+- **Authentication**: No
+- **Description**: Verifies payment details for both students and alumni.
 
-**Response:**
-- `200 OK`: Deletion successful.
-- `404 Not Found`: Student not found.
-- `500 Internal Server Error`: Server issue.
+### **Update Payment Status**
+- **Route**: `GET /api/payment/Update/:transactionId/:status`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Updates the payment status for a given transaction ID.
+
+---
+
+## **Registration Routes**
+### **Alumni Registration**
+- **Route**: `POST /api/registration/alumni-registration`
+- **Authentication**: No
+- **Description**: Registers a new alumni with personal and payment details, and uploads a profile picture.
+
+### **Student Registration**
+- **Route**: `POST /api/registration/student-registration`
+- **Authentication**: No
+- **Description**: Registers a new student with personal and payment details, and uploads a profile picture.
 
 ---
 
-### 10. Update Student Payment Status
-#### PUT `/student/paymentUpdate/:id/:status`
-**Description:** Update payment status for a student.
+## **Student Routes**
+### **Get All Students**
+- **Route**: `GET /api/student/`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Fetches all student records.
 
-**Path Parameters:**
-- `id` (String): Student ID.
-- `status` (Number): New status (0: Not Paid, 1: Paid, 3: Rejected).
+### **Update Student**
+- **Route**: `POST /api/student/update/:id`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Updates student data, including profile picture.
 
-**Response:**
-- `200 OK`: Update successful.
-- `404 Not Found`: Student not found.
-- `500 Internal Server Error`: Server issue.
+### **Delete Student**
+- **Route**: `DELETE /api/student/delete/:id`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Deletes a student record.
+
+### **Update Payment Status**
+- **Route**: `PUT /api/student/paymentUpdate/:id/:status`
+- **Authentication**: Yes (admin authentication required)
+- **Description**: Updates the payment status for a specific student.
+- **Status Values**:
+  - `0`: Pending
+  - `1`: Paid
+  - `2`: Rejected
 
 ---
+
+## **Authentication Middleware**
+- **adminAuth.authAdmin**: Middleware that verifies admin authentication for protected routes.
+
