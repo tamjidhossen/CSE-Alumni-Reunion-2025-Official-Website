@@ -246,4 +246,50 @@ const paymentUpdate = async (req, res) => {
     }
 };
 
-module.exports = { addAlumni, getAlumni, updateAlumni, deleteAlumni, paymentUpdate };
+
+const paymentCheck = async (req, res) => {
+    const { roll, reg, transactionId } = req.params;
+
+    try {
+        // Find alumni based on roll, registration number, and transaction ID
+        const alumni = await Alumni.findOne({
+            'personalInfo.roll': roll,
+            'personalInfo.registrationNo': reg,
+            'paymentInfo.transactionId': transactionId,
+        });
+
+        if (!alumni) {
+            return res.status(404).json({ success: false, message: 'Alumni not found or transaction ID mismatch' });
+        }
+
+        let statusMessage = '';
+        switch (alumni.paymentInfo.status) {
+            case 0:
+                statusMessage = 'Pending';
+                break;
+            case 1:
+                statusMessage = 'Paid';
+                break;
+            case 2:
+                statusMessage = 'Rejected';
+                break;
+            default:
+                statusMessage = 'Unknown status';
+        }
+
+        res.status(200).json({
+            success: true,
+            message: statusMessage,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching payment status',
+            error: error.message,
+        });
+    }
+};
+
+
+
+module.exports = { addAlumni, getAlumni, updateAlumni, deleteAlumni, paymentUpdate, paymentCheck };

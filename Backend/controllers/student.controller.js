@@ -201,11 +201,53 @@ const paymentUpdate = async (req, res) => {
         });
     }
 };
+const paymentCheck = async (req, res) => {
+    const { roll, reg } = req.params;
 
+    try {
+        // Find student based on roll and registration number
+        const student = await Student.findOne({
+            'personalInfo.roll': roll,
+            'personalInfo.registrationNo': reg
+        });
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        let statusMessage = '';
+        switch (student.paymentInfo.status) {
+            case 0:
+                statusMessage = 'Pending';
+                break;
+            case 1:
+                statusMessage = 'Paid';
+                break;
+            case 2:
+                statusMessage = 'Rejected';
+                break;
+            default:
+                statusMessage = 'Unknown status';
+        }
+
+        res.status(200).json({
+            success: true,
+            message: statusMessage,
+            paymentStatus: student.paymentInfo.status
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching payment status',
+            error: error.message,
+        });
+    }
+};
 module.exports = {
     addStudent,
     getStudents,
     updateStudent,
     deleteStudent,
-    paymentUpdate
+    paymentUpdate,
+    paymentCheck
 };

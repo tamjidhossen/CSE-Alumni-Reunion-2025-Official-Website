@@ -85,27 +85,6 @@ const loginAdmin = async (req, res) => {
     }
 };
 
-// Delete alumni
-// router.delete('/api/alumni/:id', async (req, res) => {
-//     const { id } = req.params;
-
-//     try {
-//         const deletedAlumni = await Alumni.findByIdAndDelete(id);
-//         if (!deletedAlumni) return res.status(404).json({ success: false, message: 'Alumni not found' });
-//         res.json({ success: true, message: 'Alumni deleted successfully', deletedAlumni });
-//     } catch (error) {
-//         res.status(500).json({ succes: false, message: 'Error deleting alumni', error: error.message });
-//     }
-// });
-// //alumni lists
-// router.get('/api/alumni', async (req, res) => {
-//     try {
-//         const alumniList = await Alumni.find();
-//         res.json(alumniList);
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error fetching alumni', error: error.message });
-//     }
-// });
 module.exports = {
     registerAdmin,
     loginAdmin
