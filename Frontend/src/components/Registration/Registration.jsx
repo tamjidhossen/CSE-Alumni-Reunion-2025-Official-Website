@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { GraduationCap, School } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import {
   Form,
   FormControl,
@@ -44,9 +47,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@radix-ui/react-switch";
+import { Label } from "@radix-ui/react-dropdown-menu";
 
 const ADULT_FEE = 200;
 const CHILD_FEE = 100;
+const STUDENT_FEE = 150;
 
 const formSchema = z.object({
   personalInfo: z.object({
@@ -102,6 +108,7 @@ const TODAY = new Date();
 export default function Registration() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isCurrentStudent, setIsCurrentStudent] = useState(false);
 
   // Add loading state for transaction id checking
   // const [isChecking, setIsChecking] = useState(false);
@@ -333,18 +340,34 @@ export default function Registration() {
   const childCount = form.watch("numberOfParticipantInfo.child") || 0;
 
   useEffect(() => {
-    // Parse string values to numbers
-    const numAdults = parseInt(adultCount) || 0;
-    const numChildren = parseInt(childCount) || 0;
+    if (isCurrentStudent) {
+      // Clear and disable professional fields
+      form.setValue("professionalInfo", {
+        currentDesignation: "",
+        currentOrganization: "",
+        from: undefined,
+        to: undefined,
+      });
+      form.setValue("prevProfessionalInfo", []);
+      // Set fixed amount
+      form.setValue("numberOfParticipantInfo.adult", 1);
+      form.setValue("numberOfParticipantInfo.child", 0);
+      form.setValue("numberOfParticipantInfo.total", 1);
+      form.setValue("paymentInfo.totalAmount", STUDENT_FEE);
+    } else {
+      // Parse string values to numbers
+      const numAdults = parseInt(adultCount) || 0;
+      const numChildren = parseInt(childCount) || 0;
 
-    // Calculate totals using numeric values
-    const totalAmount = numAdults * ADULT_FEE + numChildren * CHILD_FEE;
-    const totalCount = numAdults + numChildren;
+      // Calculate totals using numeric values
+      const totalAmount = numAdults * ADULT_FEE + numChildren * CHILD_FEE;
+      const totalCount = numAdults + numChildren;
 
-    // Update form values
-    form.setValue("paymentInfo.totalAmount", totalAmount);
-    form.setValue("numberOfParticipantInfo.total", totalCount);
-  }, [adultCount, childCount, form]);
+      // Update form values
+      form.setValue("paymentInfo.totalAmount", totalAmount);
+      form.setValue("numberOfParticipantInfo.total", totalCount);
+    }
+  }, [adultCount, childCount, form, isCurrentStudent]);
 
   // Modify onSubmit function to check transaction id
   // async function onSubmit(values) {
@@ -416,541 +439,412 @@ export default function Registration() {
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen mt-20">
+      {/* Academis Status */}
+      <div className="max-w-sm mx-auto mb-8 px-8 sm:px-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-center mb-4">
+          Select Your Academic Status
+        </h2>
+        <RadioGroup
+          defaultValue={isCurrentStudent ? "student" : "alumni"}
+          onValueChange={(value) => setIsCurrentStudent(value === "student")}
+          className="grid grid-cols-2 gap-3"
+        >
+          <div className="relative">
+            <RadioGroupItem
+              value="alumni"
+              id="alumni"
+              className="peer sr-only"
+            />
+            <label
+              htmlFor="alumni"
+              className={cn(
+                "flex flex-col items-center justify-center rounded-lg border-2 p-3 sm:p-4",
+                "cursor-pointer transition-all duration-200",
+                "hover:border-primary hover:bg-primary/5",
+                "peer-checked:border-primary/70 peer-checked:bg-primary/20",
+                !isCurrentStudent && "border-primary/70 bg-primary/20",
+                "border-muted"
+              )}
+            >
+              <GraduationCap
+                className={cn(
+                  "mb-1 h-5 w-5",
+                  !isCurrentStudent && "text-primary"
+                )}
+              />
+              <p
+                className={cn(
+                  "text-sm font-medium",
+                  !isCurrentStudent && "text-primary"
+                )}
+              >
+                Alumni
+              </p>
+            </label>
+          </div>
+
+          <div className="relative">
+            <RadioGroupItem
+              value="student"
+              id="student"
+              className="peer sr-only"
+            />
+            <label
+              htmlFor="student"
+              className={cn(
+                "flex flex-col items-center justify-center rounded-lg border-2 p-3 sm:p-4",
+                "cursor-pointer transition-all duration-200",
+                "hover:border-primary hover:bg-primary/5",
+                "peer-checked:border-primary/70 peer-checked:bg-primary/20",
+                isCurrentStudent && "border-primary/70 bg-primary/20",
+                "border-muted"
+              )}
+            >
+              <School
+                className={cn(
+                  "mb-1 h-5 w-5",
+                  isCurrentStudent && "text-primary"
+                )}
+              />
+              <p
+                className={cn(
+                  "text-sm font-medium whitespace-nowrap",
+                  isCurrentStudent && "text-primary"
+                )}
+              >
+                Current Student
+              </p>
+            </label>
+          </div>
+        </RadioGroup>
+      </div>
+
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="container mx-auto px-8 sm:px-6 max-w-3xl space-y-8 py-8 sm:py-12"
+          className="container mx-auto px-8 sm:px-4 max-w-4xl space-y-8 py-8 sm:py-12"
         >
-          {/* Input Name */}
-          <FormField
-            control={form.control}
-            name="personalInfo.name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="" type="text" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Input Roll */}
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-6">
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Personal Information
+            </h2>
+            <div className="space-y-6">
+              {/* Input Name */}
               <FormField
                 control={form.control}
-                name="personalInfo.roll"
+                name="personalInfo.name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Roll Number</FormLabel>
-                    <FormControl>
-                      <NumberInput placeholder="" {...field} />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Input Registration Number */}
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="personalInfo.registrationNo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Registration Number</FormLabel>
-                    <FormControl>
-                      <NumberInput placeholder="" {...field} />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          {/* Input Session */}
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="personalInfo.session"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Session</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-auto justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? sessions.find(
-                                  (session) => session.value === field.value
-                                )?.label
-                              : "Select session"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Command>
-                          <CommandInput placeholder="Search session..." />
-                          <CommandList>
-                            <CommandEmpty>No session found.</CommandEmpty>
-                            <CommandGroup>
-                              {sessions.map((session) => (
-                                <CommandItem
-                                  value={session.label}
-                                  key={session.value}
-                                  onSelect={() => {
-                                    form.setValue(
-                                      "personalInfo.session",
-                                      session.value
-                                    );
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      session.value === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {session.label}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Input Passing Year */}
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="personalInfo.passingYear"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Passing Year</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-auto justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? passingYears.find(
-                                  (passingYear) =>
-                                    passingYear.value === field.value
-                                )?.label
-                              : "Select passing year"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Command>
-                          <CommandInput placeholder="Search passing year..." />
-                          <CommandList>
-                            <CommandEmpty>No passing year found.</CommandEmpty>
-                            <CommandGroup>
-                              {passingYears.map((passingYear) => (
-                                <CommandItem
-                                  value={passingYear.label}
-                                  key={passingYear.value}
-                                  onSelect={() => {
-                                    form.setValue(
-                                      "personalInfo.passingYear",
-                                      passingYear.value
-                                    );
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      passingYear.value === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {passingYear.label}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          {/* Input Mobile Number */}
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="contactInfo.mobile"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mobile</FormLabel>
+                    <FormLabel>
+                      Name
+                      <span
+                        className="text-red-500 cursor-help"
+                        title="This is a mandatory field"
+                      >
+                        {" "}
+                        *
+                      </span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="" type="text" {...field} />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+              {/* Input Roll */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.roll"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Roll Number
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <NumberInput placeholder="" {...field} />
+                        </FormControl>
 
-            {/* Input Email */}
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="contactInfo.email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" type="email" {...field} />
-                    </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {/* Input Registration Number */}
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.registrationNo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Registration Number
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <NumberInput placeholder="" {...field} />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              {/* Input Session */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.session"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>
+                          Session
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between text-xs sm:text-sm",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value
+                                  ? sessions.find(
+                                      (session) => session.value === field.value
+                                    )?.label
+                                  : "Select session"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto justify-between p-0">
+                            <Command>
+                              <CommandInput placeholder="Search session..." />
+                              <CommandList>
+                                <CommandEmpty>No session found.</CommandEmpty>
+                                <CommandGroup>
+                                  {sessions.map((session) => (
+                                    <CommandItem
+                                      value={session.label}
+                                      key={session.value}
+                                      onSelect={() => {
+                                        form.setValue(
+                                          "personalInfo.session",
+                                          session.value
+                                        );
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          session.value === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {session.label}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Input Passing Year */}
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="personalInfo.passingYear"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>
+                          Passing Year
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between text-xs sm:text-sm",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value
+                                  ? passingYears.find(
+                                      (passingYear) =>
+                                        passingYear.value === field.value
+                                    )?.label
+                                  : "Select passing year"}
+                                <ChevronsUpDown className=" h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Command>
+                              <CommandInput placeholder="Search passing year..." />
+                              <CommandList>
+                                <CommandEmpty>
+                                  No passing year found.
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {passingYears.map((passingYear) => (
+                                    <CommandItem
+                                      value={passingYear.label}
+                                      key={passingYear.value}
+                                      onSelect={() => {
+                                        form.setValue(
+                                          "personalInfo.passingYear",
+                                          passingYear.value
+                                        );
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          passingYear.value === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      {passingYear.label}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          {/* Input Address */}
-          <FormField
-            control={form.control}
-            name="contactInfo.currentAddress"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="" className="resize-none" {...field} />
-                </FormControl>
 
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Input Current Designation */}
-          <FormField
-            control={form.control}
-            name="professionalInfo.currentDesignation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Designation</FormLabel>
-                <FormControl>
-                  <Input placeholder="" type="text" {...field} />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Input Current Organization */}
-          <FormField
-            control={form.control}
-            name="professionalInfo.currentOrganization"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Current Organization</FormLabel>
-                <FormControl>
-                  <Input placeholder="" type="text" {...field} />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Current Jobs Starting Date */}
-          <div className="grid grid-cols-12 gap-4 justify-center items-center">
-            <div className="mt-2.5 col-span-6">
-              <FormField
-                control={form.control}
-                name="professionalInfo.from"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>From</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              " pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
+          {/* Contact Information Section */}
+          <div className="space-y-4 pt-10">
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Contact Information
+            </h2>
+            <div className="space-y-6">
+              {/* Input Mobile Number */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="contactInfo.mobile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Mobile
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
                           >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="" type="text" {...field} />
                         </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date > TODAY}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            {/* Current Jobs Ending Date (Present) */}
-            <div className="col-span-6">
+                {/* Input Email */}
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="contactInfo.email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Email
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="" type="email" {...field} />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              {/* Input Address */}
               <FormField
                 control={form.control}
-                name="professionalInfo.to"
+                name="contactInfo.currentAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>To</FormLabel>
+                    <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Present"
-                        disabled
-                        type="text"
+                      <Textarea
+                        placeholder=""
+                        className="resize-none"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          {/* Previous Professional Information */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium">
-                Previous Professional Information
-              </h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addPreviousJob}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Previous Job
-              </Button>
-            </div>
-
-            {fields &&
-              fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="relative space-y-4 p-4 border rounded-lg"
-                >
-                  {/* Remove Button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-2 top-2"
-                    onClick={() => remove(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-
-                  {/* Designation */}
-                  <FormField
-                    control={form.control}
-                    name={`prevProfessionalInfo.${index}.designation`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Designation</FormLabel>
-                        <FormControl>
-                          <Input placeholder="" type="text" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Organization */}
-                  <FormField
-                    control={form.control}
-                    name={`prevProfessionalInfo.${index}.organization`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Organization</FormLabel>
-                        <FormControl>
-                          <Input placeholder="" type="text" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Date Range */}
-                  <div className="grid grid-cols-12 gap-4 justify-center items-center">
-                    {/* From Date */}
-                    <div className="col-span-6">
-                      <FormField
-                        control={form.control}
-                        name={`prevProfessionalInfo.${index}.from`}
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>From</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) => date > TODAY}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* To Date */}
-                    <div className="col-span-6">
-                      <FormField
-                        control={form.control}
-                        name={`prevProfessionalInfo.${index}.to`}
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>To</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "pl-3 text-left font-normal",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? (
-                                      format(field.value, "PPP")
-                                    ) : (
-                                      <span>Pick a date</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) => date > TODAY}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-          {/* Adult Participants  */}
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="numberOfParticipantInfo.adult"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Adult</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Child Participants  */}
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="numberOfParticipantInfo.child"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Child</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" type="number" min={0} {...field} />
-                    </FormControl>
 
                     <FormMessage />
                   </FormItem>
@@ -958,65 +852,19 @@ export default function Registration() {
               />
             </div>
           </div>
-          {/* Total Amount  */}
-          <FormField
-            control={form.control}
-            name="paymentInfo.totalAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Total</FormLabel>
-                <FormControl>
-                  <NumberInput
-                    placeholder=""
-                    disabled
-                    {...field}
-                    value={field.value || 0}
-                  />
-                </FormControl>
 
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* Payment Method  */}
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-6">
+          <div className="space-y-4 pt-10">
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Professional Information
+            </h2>
+            <div className="space-y-6">
+              {/* Input Current Designation */}
               <FormField
                 control={form.control}
-                name="paymentInfo.mobileBankingName"
+                name="professionalInfo.currentDesignation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Method</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Bkash">Bkash</SelectItem>
-                        <SelectItem value="Rocket">Rocket</SelectItem>
-                        <SelectItem value="Nagad">Nagad</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Transation Id */}
-            <div className="col-span-6">
-              <FormField
-                control={form.control}
-                name="paymentInfo.transactionId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Transaction Id</FormLabel>
+                    <FormLabel>Current Designation</FormLabel>
                     <FormControl>
                       <Input placeholder="" type="text" {...field} />
                     </FormControl>
@@ -1025,16 +873,431 @@ export default function Registration() {
                   </FormItem>
                 )}
               />
+              {/* Input Current Organization */}
+              <FormField
+                control={form.control}
+                name="professionalInfo.currentOrganization"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Organization</FormLabel>
+                    <FormControl>
+                      <Input placeholder="" type="text" {...field} />
+                    </FormControl>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Current Jobs Starting Date */}
+              <div className="grid grid-cols-12 gap-4 justify-center items-center">
+                <div className="mt-2.5 col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="professionalInfo.from"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>From</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  " pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date > TODAY}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Current Jobs Ending Date (Present) */}
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="professionalInfo.to"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>To</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Present"
+                            disabled
+                            type="text"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              {/* Previous Professional Information */}
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <h3 className="text-base sm:text-lg font-medium">
+                    Previous Professional Info
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addPreviousJob}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="whitespace-nowrap">Add Previous Job</span>
+                  </Button>
+                </div>
+
+                {fields &&
+                  fields.map((field, index) => (
+                    <div
+                      key={field.id}
+                      className="relative space-y-4 p-4 border rounded-lg"
+                    >
+                      {/* Remove Button */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-2"
+                        onClick={() => remove(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+
+                      {/* Designation */}
+                      <FormField
+                        control={form.control}
+                        name={`prevProfessionalInfo.${index}.designation`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Designation</FormLabel>
+                            <FormControl>
+                              <Input placeholder="" type="text" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Organization */}
+                      <FormField
+                        control={form.control}
+                        name={`prevProfessionalInfo.${index}.organization`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Organization</FormLabel>
+                            <FormControl>
+                              <Input placeholder="" type="text" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Date Range */}
+                      <div className="grid grid-cols-12 gap-4 justify-center items-center">
+                        {/* From Date */}
+                        <div className="col-span-6">
+                          <FormField
+                            control={form.control}
+                            name={`prevProfessionalInfo.${index}.from`}
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel>From</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        className={cn(
+                                          "pl-3 text-left font-normal",
+                                          !field.value &&
+                                            "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value ? (
+                                          format(field.value, "PPP")
+                                        ) : (
+                                          <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                  >
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value}
+                                      onSelect={field.onChange}
+                                      disabled={(date) => date > TODAY}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* To Date */}
+                        <div className="col-span-6">
+                          <FormField
+                            control={form.control}
+                            name={`prevProfessionalInfo.${index}.to`}
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel>To</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant="outline"
+                                        className={cn(
+                                          "pl-3 text-left font-normal",
+                                          !field.value &&
+                                            "text-muted-foreground"
+                                        )}
+                                      >
+                                        {field.value ? (
+                                          format(field.value, "PPP")
+                                        ) : (
+                                          <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                  >
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value}
+                                      onSelect={field.onChange}
+                                      disabled={(date) => date > TODAY}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
+
+          <div className="space-y-4 pt-10">
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Participant Information
+            </h2>
+            <div className="space-y-6">
+              {/* Adult Participants  */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="numberOfParticipantInfo.adult"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Adult
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder=""
+                            type="number"
+                            min={1}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Child Participants  */}
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="numberOfParticipantInfo.child"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Child</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder=""
+                            type="number"
+                            min={0}
+                            {...field}
+                          />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-10">
+            <h2 className="text-xl font-semibold border-b pb-2">
+              Payment Information
+            </h2>
+            <div className="space-y-6">
+              {/* Total Amount  */}
+              <FormField
+                control={form.control}
+                name="paymentInfo.totalAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Amount</FormLabel>
+                    <FormControl>
+                      <NumberInput
+                        placeholder=""
+                        disabled
+                        {...field}
+                        value={field.value || 0}
+                      />
+                    </FormControl>
+
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Payment Method  */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="paymentInfo.mobileBankingName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Payment Method
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Bkash">Bkash</SelectItem>
+                            <SelectItem value="Rocket">Rocket</SelectItem>
+                            <SelectItem value="Nagad">Nagad</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Transation Id */}
+                <div className="col-span-6">
+                  <FormField
+                    control={form.control}
+                    name="paymentInfo.transactionId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Transaction Id
+                          <span
+                            className="text-red-500 cursor-help"
+                            title="This is a mandatory field"
+                          >
+                            {" "}
+                            *
+                          </span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="" type="text" {...field} />
+                        </FormControl>
+
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Profile Picture */}
-          <div className="space-y-4">
+          <div className="space-y-4 pt-10">
+            <h2 className="text-2xl font-semibold border-b pb-2"></h2>
             <FormField
               control={form.control}
               name="profilePictureInfo.image"
               render={({ field: { value, onChange, ...field } }) => (
                 <FormItem>
-                  <FormLabel>Profile Picture</FormLabel>
+                  <FormLabel>
+                    Profile Picture
+                    <span
+                      className="text-red-500 cursor-help"
+                      title="This is a mandatory field"
+                    >
+                      {" "}
+                      *
+                    </span>
+                  </FormLabel>
                   <FormControl>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div
