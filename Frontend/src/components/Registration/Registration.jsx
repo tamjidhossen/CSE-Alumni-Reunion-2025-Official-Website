@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registrationApi } from "@/api/registration";
-import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -364,7 +363,7 @@ export default function Registration() {
           currentDesignation: "",
           currentOrganization: "",
           from: undefined,
-          to: "Present",
+          to: undefined,
         },
         prevProfessionalInfo: [],
         numberOfParticipantInfo: {
@@ -392,12 +391,10 @@ export default function Registration() {
     }
   }, [isCurrentStudent, adultCount, childCount, form]);
 
-  // Replace your current onSubmit with this:
   async function onSubmit(values) {
     try {
       setIsSubmitting(true);
 
-      // Log the form data before submission
       console.log("Submitting form data:", values);
 
       // Submit form based on user type
@@ -405,10 +402,8 @@ export default function Registration() {
         ? registrationApi.submitStudentForm(values)
         : registrationApi.submitAlumniForm(values));
 
-      // Log the response
       console.log("Server response:", response);
 
-      // Check response validation
       if (response.success) {
         toast({
           title: "Registration Complete",
@@ -416,7 +411,6 @@ export default function Registration() {
             "Your data has been submitted. We will notify you once it's been verified. Thank You.",
         });
 
-        // Reset form
         form.reset();
 
         // Redirect to home page after 3 seconds
@@ -445,33 +439,6 @@ export default function Registration() {
       setIsSubmitting(false);
     }
   }
-
-  // function onSubmit(values) {
-  //   try {
-  //     console.log(values);
-  //     toast({
-  //       title: "Registration Complete",
-  //       description:
-  //         "Your data has been submitted. We will notify you once it's been verified. Thank You.",
-  //     });
-
-  //     // Reset form
-  //     // form.reset();
-
-  //     // Use the navigate hook directly
-  //     // setTimeout(() => {
-  //     //   navigate("/");
-  //     // }, 2000);
-  //   } catch (error) {
-  //     console.error("Form submission error", error);
-  //     toast({
-  //       variant: "destructive",
-  //       title: "Uh oh! Something went wrong.",
-  //       description: "There was a problem with your request.",
-  //       action: <ToastAction altText="Try again">Try again</ToastAction>,
-  //     });
-  //   }
-  // }
 
   return (
     <div className="relative min-h-screen mt-20">
@@ -1409,12 +1376,6 @@ export default function Registration() {
               />
             </div>
           )}
-          {/* <Button
-            type="submit"
-            className="w-full sm:w-auto px-8 py-2 mt-8 text-sm sm:text-base font-medium"
-          >
-            Submit
-          </Button> */}
 
           {/* Update submit button for transaction id checking */}
           <Button
