@@ -5,10 +5,8 @@ const API_BASE_URL = "http://localhost:8000/api/registration";
 export const registrationApi = {
   submitStudentForm: async (formData) => {
     try {
-      // Create FormData object for file upload
       const data = new FormData();
 
-      // Append all form fields to FormData
       Object.keys(formData).forEach((key) => {
         if (key === "profilePictureInfo" && formData[key].image) {
           data.append("profilePicture", formData[key].image);
@@ -34,10 +32,8 @@ export const registrationApi = {
 
   submitAlumniForm: async (formData) => {
     try {
-      // Create FormData object for file upload
       const data = new FormData();
 
-      // Append all form fields to FormData
       Object.keys(formData).forEach((key) => {
         if (key === "profilePictureInfo" && formData[key].image) {
           data.append("profilePicture", formData[key].image);
