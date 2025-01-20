@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { registrationApi } from "@/api/registration";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
@@ -35,7 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, Upload, ChevronsUpDown, Plus, X } from "lucide-react";
+import { Check, Upload, ChevronsUpDown, Plus, X, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -47,83 +48,83 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@radix-ui/react-switch";
-import { Label } from "@radix-ui/react-dropdown-menu";
 
 const ADULT_FEE = 200;
 const CHILD_FEE = 100;
 const STUDENT_FEE = 150;
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
-const formSchema = z.object({
-  personalInfo: z.object({
-    name: z.string().min(1, "Name is required"),
-    roll: z.coerce
-      .number({ invalid_type_error: "Must be a valid number" })
-      .min(0),
-    registrationNo: z.coerce
-      .number({ invalid_type_error: "Must be a valid number" })
-      .min(0),
-    session: z.string().min(1, "Session is required"),
-    passingYear: z.string().min(1, "Passing Year is required"),
-  }),
-  contactInfo: z.object({
-    mobile: z.string().min(1, "Mobile number is required"),
-    email: z.string().email("Invalid email address"),
-    currentAddress: z.string().min(1, "Address is required"),
-  }),
-  professionalInfo: z.object({
-    currentDesignation: z.string().optional(),
-    currentOrganization: z.string().optional(),
-    from: z.date().optional(),
-    to: z.string().optional(),
-  }),
-  prevProfessionalInfo: z
-    .array(
-      z.object({
-        designation: z.string().optional(),
-        organization: z.string().optional(),
-        from: z.date().optional(),
-        to: z.date().optional(),
-      })
-    )
-    .optional(),
-  numberOfParticipantInfo: z.object({
-    adult: z.coerce.number().min(1, "At least one adult required"),
-    child: z.coerce.number().min(0).optional(),
-    total: z.coerce.number().optional(),
-  }),
-  paymentInfo: z.object({
-    totalAmount: z.coerce.number().optional(),
-    mobileBankingName: z.string().min(1, "Payment method is required"),
-    status: z.coerce.number().default(1),
-    transactionId: z.string().min(1, "Transaction ID is required"),
-  }),
-  profilePictureInfo: z.object({
-    image: z.instanceof(File).optional().or(z.string()),
-  }),
-});
+const formSchema = (isCurrentStudent) =>
+  z.object({
+    personalInfo: z.object({
+      name: z.string().min(1, "Name is required"),
+      roll: z.coerce.number().min(1, "Roll is required"),
+      registrationNo: z.coerce
+        .number()
+        .min(1, "Registration number is required"),
+      session: z.string().min(1, "Session is required"),
+      passingYear: isCurrentStudent
+        ? z.string().optional()
+        : z.string().min(1, "Passing Year is required"),
+    }),
+    contactInfo: z.object({
+      mobile: z.string().min(1, "Mobile number is required"),
+      email: z.string().email("Invalid email address"),
+      currentAddress: z.string().optional(),
+    }),
+    professionalInfo: isCurrentStudent
+      ? z.object({}).optional()
+      : z.object({
+          currentDesignation: z.string().optional(),
+          currentOrganization: z.string().optional(),
+          from: z.date().optional(),
+          to: z.string().optional(),
+        }),
+    prevProfessionalInfo: isCurrentStudent
+      ? z.array(z.object({})).optional()
+      : z
+          .array(
+            z.object({
+              designation: z.string().optional(),
+              organization: z.string().optional(),
+              from: z.date().optional(),
+              to: z.date().optional(),
+            })
+          )
+          .optional(),
+    numberOfParticipantInfo: isCurrentStudent
+      ? z.object({
+          adult: z.literal(1),
+          child: z.literal(0),
+          total: z.literal(1),
+        })
+      : z.object({
+          adult: z.coerce.number().min(1, "At least one adult required"),
+          child: z.coerce.number().min(0).optional(),
+          total: z.coerce.number().optional(),
+        }),
+    paymentInfo: z.object({
+      totalAmount: z.coerce.number(),
+      mobileBankingName: z.string().min(1, "Payment method is required"),
+      status: z.coerce.number().default(1),
+      transactionId: z.string().min(1, "Transaction ID is required"),
+    }),
+    profilePictureInfo: isCurrentStudent
+      ? z.object({}).optional()
+      : z.object({
+          image: z.instanceof(File, { message: "Profile picture is required" }),
+        }),
+  });
 
 const TODAY = new Date();
 
 export default function Registration() {
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isCurrentStudent, setIsCurrentStudent] = useState(false);
 
   // Add loading state for transaction id checking
-  // const [isChecking, setIsChecking] = useState(false);
-  // Add check function
-  // const checkTransactionId = async (transactionId) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `/api/registration/check-transaction/${transactionId}`
-  //     );
-  //     return response.data.isUnique;
-  //   } catch (error) {
-  //     console.error("Transaction check failed:", error);
-  //     return false;
-  //   }
-  // };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sessions = [
     {
@@ -282,9 +283,21 @@ export default function Registration() {
     },
   ];
 
+  const RequiredField = ({ value }) => {
+    return !value ? (
+      <span
+        className="text-red-500 cursor-help"
+        title="This is a mandatory field"
+      >
+        {" "}
+        *
+      </span>
+    ) : null;
+  };
+
   // default values for the form
   const form = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema(isCurrentStudent)),
     defaultValues: {
       personalInfo: {
         name: "",
@@ -340,54 +353,101 @@ export default function Registration() {
   const childCount = form.watch("numberOfParticipantInfo.child") || 0;
 
   useEffect(() => {
+    // Reset form errors when switching status
+    form.clearErrors();
+
     if (isCurrentStudent) {
-      // Clear and disable professional fields
-      form.setValue("professionalInfo", {
-        currentDesignation: "",
-        currentOrganization: "",
-        from: undefined,
-        to: undefined,
+      // Set student-specific values and clear alumni fields
+      form.reset({
+        ...form.getValues(),
+        professionalInfo: {
+          currentDesignation: "",
+          currentOrganization: "",
+          from: undefined,
+          to: "Present",
+        },
+        prevProfessionalInfo: [],
+        numberOfParticipantInfo: {
+          adult: 1,
+          child: 0,
+          total: 1,
+        },
+        paymentInfo: {
+          ...form.getValues().paymentInfo,
+          totalAmount: STUDENT_FEE,
+        },
+        profilePictureInfo: {
+          image: undefined,
+        },
       });
-      form.setValue("prevProfessionalInfo", []);
-      // Set fixed amount
-      form.setValue("numberOfParticipantInfo.adult", 1);
-      form.setValue("numberOfParticipantInfo.child", 0);
-      form.setValue("numberOfParticipantInfo.total", 1);
-      form.setValue("paymentInfo.totalAmount", STUDENT_FEE);
     } else {
-      // Parse string values to numbers
+      // Handle alumni calculations
       const numAdults = parseInt(adultCount) || 0;
       const numChildren = parseInt(childCount) || 0;
-
-      // Calculate totals using numeric values
       const totalAmount = numAdults * ADULT_FEE + numChildren * CHILD_FEE;
       const totalCount = numAdults + numChildren;
 
-      // Update form values
-      form.setValue("paymentInfo.totalAmount", totalAmount);
       form.setValue("numberOfParticipantInfo.total", totalCount);
+      form.setValue("paymentInfo.totalAmount", totalAmount);
     }
-  }, [adultCount, childCount, form, isCurrentStudent]);
+  }, [isCurrentStudent, adultCount, childCount, form]);
 
-  // Modify onSubmit function to check transaction id
-  // async function onSubmit(values) {
+  // Replace your current onSubmit with this:
+  async function onSubmit(values) {
+    try {
+      setIsSubmitting(true);
+
+      // Log the form data before submission
+      console.log("Submitting form data:", values);
+
+      // Submit form based on user type
+      const response = await (isCurrentStudent
+        ? registrationApi.submitStudentForm(values)
+        : registrationApi.submitAlumniForm(values));
+
+      // Log the response
+      console.log("Server response:", response);
+
+      // Check response validation
+      if (response.success) {
+        toast({
+          title: "Registration Complete",
+          description:
+            "Your data has been submitted. We will notify you once it's been verified. Thank You.",
+        });
+
+        // Reset form
+        form.reset();
+
+        // Redirect to home page after 3 seconds
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Invalid Transaction ID",
+          description:
+            "The provided transaction ID has already been used or is invalid.",
+        });
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast({
+        variant: "destructive",
+        title: "Submission Failed",
+        description:
+          error.message ||
+          "There was a problem submitting your registration. Please try again.",
+        action: <ToastAction altText="Try again">Try again</ToastAction>,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  // function onSubmit(values) {
   //   try {
-  //     setIsChecking(true);
-  //     const isUnique = await checkTransactionId(
-  //       values.paymentInfo.transactionId
-  //     );
-
-  //     if (!isUnique) {
-  //       toast({
-  //         variant: "destructive",
-  //         title: "Error",
-  //         description: "This Transaction ID has already been used",
-  //       });
-  //       setIsChecking(false);
-  //       return;
-  //     }
-
-  //     // Continue with existing submission logic
   //     console.log(values);
   //     toast({
   //       title: "Registration Complete",
@@ -395,48 +455,23 @@ export default function Registration() {
   //         "Your data has been submitted. We will notify you once it's been verified. Thank You.",
   //     });
 
-  //     form.reset();
-  //     setTimeout(() => {
-  //       navigate("/");
-  //     }, 2000);
+  //     // Reset form
+  //     // form.reset();
+
+  //     // Use the navigate hook directly
+  //     // setTimeout(() => {
+  //     //   navigate("/");
+  //     // }, 2000);
   //   } catch (error) {
   //     console.error("Form submission error", error);
   //     toast({
   //       variant: "destructive",
-  //       title: "Error",
-  //       description: "Registration failed. Please try again.",
+  //       title: "Uh oh! Something went wrong.",
+  //       description: "There was a problem with your request.",
+  //       action: <ToastAction altText="Try again">Try again</ToastAction>,
   //     });
-  //   } finally {
-  //     setIsChecking(false);
   //   }
   // }
-
-  function onSubmit(values) {
-    try {
-      console.log(values);
-      toast({
-        title: "Registration Complete",
-        description:
-          "Your data has been submitted. We will notify you once it's been verified. Thank You.",
-      });
-
-      // Reset form
-      form.reset();
-
-      // Use the navigate hook directly
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
-    } catch (error) {
-      console.error("Form submission error", error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
-    }
-  }
 
   return (
     <div className="relative min-h-screen mt-20">
@@ -539,16 +574,20 @@ export default function Registration() {
                   <FormItem>
                     <FormLabel>
                       Name
-                      <span
-                        className="text-red-500 cursor-help"
-                        title="This is a mandatory field"
-                      >
-                        {" "}
-                        *
-                      </span>
+                      <RequiredField value={field.value} />
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="" type="text" {...field} />
+                      <Input
+                        placeholder=""
+                        type="text"
+                        pattern="[A-Za-z\s.]+"
+                        onKeyPress={(e) => {
+                          if (!/[A-Za-z\s.]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -564,16 +603,20 @@ export default function Registration() {
                       <FormItem>
                         <FormLabel>
                           Roll Number
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <FormControl>
-                          <NumberInput placeholder="" {...field} />
+                          <NumberInput
+                            placeholder=""
+                            type="text"
+                            pattern="[0-9]+"
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            {...field}
+                          />
                         </FormControl>
 
                         <FormMessage />
@@ -591,16 +634,20 @@ export default function Registration() {
                       <FormItem>
                         <FormLabel>
                           Registration Number
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <FormControl>
-                          <NumberInput placeholder="" {...field} />
+                          <NumberInput
+                            placeholder=""
+                            type="text"
+                            pattern="[0-9]+"
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            {...field}
+                          />
                         </FormControl>
 
                         <FormMessage />
@@ -619,13 +666,7 @@ export default function Registration() {
                       <FormItem className="flex flex-col">
                         <FormLabel>
                           Session
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -688,84 +729,80 @@ export default function Registration() {
                 </div>
 
                 {/* Input Passing Year */}
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="personalInfo.passingYear"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>
-                          Passing Year
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
-                        </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className={cn(
-                                  "w-full justify-between text-xs sm:text-sm",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value
-                                  ? passingYears.find(
-                                      (passingYear) =>
-                                        passingYear.value === field.value
-                                    )?.label
-                                  : "Select passing year"}
-                                <ChevronsUpDown className=" h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Command>
-                              <CommandInput placeholder="Search passing year..." />
-                              <CommandList>
-                                <CommandEmpty>
-                                  No passing year found.
-                                </CommandEmpty>
-                                <CommandGroup>
-                                  {passingYears.map((passingYear) => (
-                                    <CommandItem
-                                      value={passingYear.label}
-                                      key={passingYear.value}
-                                      onSelect={() => {
-                                        form.setValue(
-                                          "personalInfo.passingYear",
-                                          passingYear.value
-                                        );
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
+                {!isCurrentStudent && (
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="personalInfo.passingYear"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>
+                            Passing Year
+                            <RequiredField value={field.value} />
+                          </FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className={cn(
+                                    "w-full justify-between text-xs sm:text-sm",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value
+                                    ? passingYears.find(
+                                        (passingYear) =>
                                           passingYear.value === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      {passingYear.label}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                                      )?.label
+                                    : "Select passing year"}
+                                  <ChevronsUpDown className=" h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Command>
+                                <CommandInput placeholder="Search passing year..." />
+                                <CommandList>
+                                  <CommandEmpty>
+                                    No passing year found.
+                                  </CommandEmpty>
+                                  <CommandGroup>
+                                    {passingYears.map((passingYear) => (
+                                      <CommandItem
+                                        value={passingYear.label}
+                                        key={passingYear.value}
+                                        onSelect={() => {
+                                          form.setValue(
+                                            "personalInfo.passingYear",
+                                            passingYear.value
+                                          );
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            passingYear.value === field.value
+                                              ? "opacity-100"
+                                              : "opacity-0"
+                                          )}
+                                        />
+                                        {passingYear.label}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -786,16 +823,20 @@ export default function Registration() {
                       <FormItem>
                         <FormLabel>
                           Mobile
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="" type="text" {...field} />
+                          <Input
+                            placeholder=""
+                            type="text"
+                            pattern="[0-9]+"
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            {...field}
+                          />
                         </FormControl>
 
                         <FormMessage />
@@ -813,13 +854,7 @@ export default function Registration() {
                       <FormItem>
                         <FormLabel>
                           Email
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <FormControl>
                           <Input placeholder="" type="email" {...field} />
@@ -853,338 +888,340 @@ export default function Registration() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-10">
-            <h2 className="text-xl font-semibold border-b pb-2">
-              Professional Information
-            </h2>
-            <div className="space-y-6">
-              {/* Input Current Designation */}
-              <FormField
-                control={form.control}
-                name="professionalInfo.currentDesignation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Designation</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" type="text" {...field} />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Input Current Organization */}
-              <FormField
-                control={form.control}
-                name="professionalInfo.currentOrganization"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Organization</FormLabel>
-                    <FormControl>
-                      <Input placeholder="" type="text" {...field} />
-                    </FormControl>
-
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Current Jobs Starting Date */}
-              <div className="grid grid-cols-12 gap-4 justify-center items-center">
-                <div className="mt-2.5 col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="professionalInfo.from"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>From</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  " pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date > TODAY}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Current Jobs Ending Date (Present) */}
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="professionalInfo.to"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>To</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Present"
-                            disabled
-                            type="text"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              {/* Previous Professional Information */}
+          {!isCurrentStudent && (
+            <div className="space-y-4 pt-10">
+              <h2 className="text-xl font-semibold border-b pb-2">
+                Professional Information
+              </h2>
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <h3 className="text-base sm:text-lg font-medium">
-                    Previous Professional Info
-                  </h3>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addPreviousJob}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="whitespace-nowrap">Add Previous Job</span>
-                  </Button>
+                {/* Input Current Designation */}
+                <FormField
+                  control={form.control}
+                  name="professionalInfo.currentDesignation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Designation</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" type="text" {...field} />
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* Input Current Organization */}
+                <FormField
+                  control={form.control}
+                  name="professionalInfo.currentOrganization"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Organization</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" type="text" {...field} />
+                      </FormControl>
+
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* Current Jobs Starting Date */}
+                <div className="grid grid-cols-12 gap-4 justify-center items-center">
+                  <div className="mt-2.5 col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="professionalInfo.from"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>From</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    " pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date > TODAY}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Current Jobs Ending Date (Present) */}
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="professionalInfo.to"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>To</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Present"
+                              disabled
+                              type="text"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-
-                {fields &&
-                  fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="relative space-y-4 p-4 border rounded-lg"
+                {/* Previous Professional Information */}
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <h3 className="text-base sm:text-lg font-medium">
+                      Previous Professional Info
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addPreviousJob}
+                      className="w-full sm:w-auto flex items-center justify-center gap-2"
                     >
-                      {/* Remove Button */}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-2"
-                        onClick={() => remove(index)}
+                      <Plus className="h-4 w-4" />
+                      <span className="whitespace-nowrap">
+                        Add Previous Job
+                      </span>
+                    </Button>
+                  </div>
+
+                  {fields &&
+                    fields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="relative space-y-4 p-4 border rounded-lg"
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
+                        {/* Remove Button */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-2 top-2"
+                          onClick={() => remove(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
 
-                      {/* Designation */}
-                      <FormField
-                        control={form.control}
-                        name={`prevProfessionalInfo.${index}.designation`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Designation</FormLabel>
-                            <FormControl>
-                              <Input placeholder="" type="text" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        {/* Designation */}
+                        <FormField
+                          control={form.control}
+                          name={`prevProfessionalInfo.${index}.designation`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Designation</FormLabel>
+                              <FormControl>
+                                <Input placeholder="" type="text" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      {/* Organization */}
-                      <FormField
-                        control={form.control}
-                        name={`prevProfessionalInfo.${index}.organization`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Organization</FormLabel>
-                            <FormControl>
-                              <Input placeholder="" type="text" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        {/* Organization */}
+                        <FormField
+                          control={form.control}
+                          name={`prevProfessionalInfo.${index}.organization`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Organization</FormLabel>
+                              <FormControl>
+                                <Input placeholder="" type="text" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      {/* Date Range */}
-                      <div className="grid grid-cols-12 gap-4 justify-center items-center">
-                        {/* From Date */}
-                        <div className="col-span-6">
-                          <FormField
-                            control={form.control}
-                            name={`prevProfessionalInfo.${index}.from`}
-                            render={({ field }) => (
-                              <FormItem className="flex flex-col">
-                                <FormLabel>From</FormLabel>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        className={cn(
-                                          "pl-3 text-left font-normal",
-                                          !field.value &&
-                                            "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value ? (
-                                          format(field.value, "PPP")
-                                        ) : (
-                                          <span>Pick a date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-auto p-0"
-                                    align="start"
-                                  >
-                                    <Calendar
-                                      mode="single"
-                                      selected={field.value}
-                                      onSelect={field.onChange}
-                                      disabled={(date) => date > TODAY}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                        {/* Date Range */}
+                        <div className="grid grid-cols-12 gap-4 justify-center items-center">
+                          {/* From Date */}
+                          <div className="col-span-6">
+                            <FormField
+                              control={form.control}
+                              name={`prevProfessionalInfo.${index}.from`}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                  <FormLabel>From</FormLabel>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <FormControl>
+                                        <Button
+                                          variant="outline"
+                                          className={cn(
+                                            "pl-3 text-left font-normal",
+                                            !field.value &&
+                                              "text-muted-foreground"
+                                          )}
+                                        >
+                                          {field.value ? (
+                                            format(field.value, "PPP")
+                                          ) : (
+                                            <span>Pick a date</span>
+                                          )}
+                                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                      </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-auto p-0"
+                                      align="start"
+                                    >
+                                      <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date > TODAY}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
 
-                        {/* To Date */}
-                        <div className="col-span-6">
-                          <FormField
-                            control={form.control}
-                            name={`prevProfessionalInfo.${index}.to`}
-                            render={({ field }) => (
-                              <FormItem className="flex flex-col">
-                                <FormLabel>To</FormLabel>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <FormControl>
-                                      <Button
-                                        variant="outline"
-                                        className={cn(
-                                          "pl-3 text-left font-normal",
-                                          !field.value &&
-                                            "text-muted-foreground"
-                                        )}
-                                      >
-                                        {field.value ? (
-                                          format(field.value, "PPP")
-                                        ) : (
-                                          <span>Pick a date</span>
-                                        )}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                      </Button>
-                                    </FormControl>
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-auto p-0"
-                                    align="start"
-                                  >
-                                    <Calendar
-                                      mode="single"
-                                      selected={field.value}
-                                      onSelect={field.onChange}
-                                      disabled={(date) => date > TODAY}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          {/* To Date */}
+                          <div className="col-span-6">
+                            <FormField
+                              control={form.control}
+                              name={`prevProfessionalInfo.${index}.to`}
+                              render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                  <FormLabel>To</FormLabel>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <FormControl>
+                                        <Button
+                                          variant="outline"
+                                          className={cn(
+                                            "pl-3 text-left font-normal",
+                                            !field.value &&
+                                              "text-muted-foreground"
+                                          )}
+                                        >
+                                          {field.value ? (
+                                            format(field.value, "PPP")
+                                          ) : (
+                                            <span>Pick a date</span>
+                                          )}
+                                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                        </Button>
+                                      </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-auto p-0"
+                                      align="start"
+                                    >
+                                      <Calendar
+                                        mode="single"
+                                        selected={field.value}
+                                        onSelect={field.onChange}
+                                        disabled={(date) => date > TODAY}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 pt-10">
-            <h2 className="text-xl font-semibold border-b pb-2">
-              Participant Information
-            </h2>
-            <div className="space-y-6">
-              {/* Adult Participants  */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="numberOfParticipantInfo.adult"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Adult
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            type="number"
-                            min={1}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Child Participants  */}
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="numberOfParticipantInfo.child"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Child</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder=""
-                            type="number"
-                            min={0}
-                            {...field}
-                          />
-                        </FormControl>
-
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    ))}
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
+          {!isCurrentStudent && (
+            <div className="space-y-4 pt-10">
+              <h2 className="text-xl font-semibold border-b pb-2">
+                Participant Information
+              </h2>
+              <div className="space-y-6">
+                {/* Adult Participants  */}
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="numberOfParticipantInfo.adult"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Adult
+                            <RequiredField value={field.value} />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder=""
+                              type="number"
+                              min={1}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Child Participants  */}
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="numberOfParticipantInfo.child"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Child</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder=""
+                              type="number"
+                              min={0}
+                              {...field}
+                            />
+                          </FormControl>
+
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="space-y-4 pt-10">
             <h2 className="text-xl font-semibold border-b pb-2">
               Payment Information
@@ -1220,13 +1257,7 @@ export default function Registration() {
                       <FormItem>
                         <FormLabel>
                           Payment Method
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -1259,13 +1290,7 @@ export default function Registration() {
                       <FormItem>
                         <FormLabel>
                           Transaction Id
-                          <span
-                            className="text-red-500 cursor-help"
-                            title="This is a mandatory field"
-                          >
-                            {" "}
-                            *
-                          </span>
+                          <RequiredField value={field.value} />
                         </FormLabel>
                         <FormControl>
                           <Input placeholder="" type="text" {...field} />
@@ -1281,118 +1306,135 @@ export default function Registration() {
           </div>
 
           {/* Profile Picture */}
-          <div className="space-y-4 pt-10">
-            <h2 className="text-2xl font-semibold border-b pb-2"></h2>
-            <FormField
-              control={form.control}
-              name="profilePictureInfo.image"
-              render={({ field: { value, onChange, ...field } }) => (
-                <FormItem>
-                  <FormLabel>
-                    Profile Picture
-                    <span
-                      className="text-red-500 cursor-help"
-                      title="This is a mandatory field"
-                    >
-                      {" "}
-                      *
-                    </span>
-                  </FormLabel>
-                  <FormControl>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div
-                        className={cn(
-                          "border-2 border-dashed rounded-lg p-4",
-                          "w-auto h-auto sm:w-[200px] sm:h-[150px] md:w-[200px] md:h-[150px]",
-                          "flex flex-col items-center justify-center gap-2",
-                          "cursor-pointer hover:border-primary transition-colors",
-                          value && "border-primary"
-                        )}
-                        onClick={() =>
-                          document.getElementById("picture-upload").click()
-                        }
+          {!isCurrentStudent && (
+            <div className="space-y-4 pt-10">
+              <h2 className="text-2xl font-semibold border-b pb-2"></h2>
+              <FormField
+                control={form.control}
+                name="profilePictureInfo.image"
+                render={({ field: { value, onChange, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Profile Picture
+                      <span
+                        className="text-red-500 cursor-help"
+                        title="This is a mandatory field"
                       >
-                        {value ? (
-                          <div className="relative w-full h-full">
-                            <img
-                              src={
-                                typeof value === "string"
-                                  ? value
-                                  : URL.createObjectURL(value)
-                              }
-                              alt="Profile preview"
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onChange(null);
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-                            <p className="text-xs sm:text-sm text-muted-foreground text-center">
-                              Click to upload
-                            </p>
-                          </>
-                        )}
-                      </div>
-                      <input
-                        id="picture-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 5 * 1024 * 1024) {
-                              // 5MB limit
-                              toast({
-                                variant: "destructive",
-                                title: "File too large",
-                                description:
-                                  "Please upload an image smaller than 5MB",
-                              });
-                              return;
-                            }
-                            onChange(file);
+                        {" "}
+                        *
+                      </span>
+                    </FormLabel>
+                    <FormControl>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <div
+                          className={cn(
+                            "border-2 border-dashed rounded-lg p-4",
+                            "w-auto h-auto sm:w-[200px] sm:h-[150px] md:w-[200px] md:h-[150px]",
+                            "flex flex-col items-center justify-center gap-2",
+                            "cursor-pointer hover:border-primary transition-colors",
+                            value && "border-primary"
+                          )}
+                          onClick={() =>
+                            document.getElementById("picture-upload").click()
                           }
-                        }}
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormDescription className="text-xs sm:text-sm text-center sm:text-left">
-                    Upload a profile picture (max 5MB)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <Button
+                        >
+                          {value ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={
+                                  typeof value === "string"
+                                    ? value
+                                    : URL.createObjectURL(value)
+                                }
+                                alt="Profile preview"
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute -top-2 -right-2 h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onChange(null);
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+                              <p className="text-xs sm:text-sm text-muted-foreground text-center">
+                                Click to upload
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          id="picture-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > MAX_FILE_SIZE) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "File too large",
+                                  description:
+                                    "Please upload an image smaller than 2MB",
+                                });
+                                return;
+                              }
+                              onChange(file);
+                            }
+                          }}
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormDescription className="text-xs sm:text-sm text-muted-foreground">
+                      Upload a recent formal passport size photo (max 2MB).
+                      Photo should be:
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Clear, front-facing with formal attire</li>
+                        <li>Latest photo preferable</li>
+                      </ul>
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+          {/* <Button
             type="submit"
             className="w-full sm:w-auto px-8 py-2 mt-8 text-sm sm:text-base font-medium"
           >
             Submit
-          </Button>
+          </Button> */}
 
           {/* Update submit button for transaction id checking */}
-          {/* <Button
+          <Button
             type="submit"
-            disabled={isChecking}
-            className="w-full sm:w-auto px-8 py-2 mt-8 text-sm sm:text-base font-medium"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full sm:w-auto px-8 py-2 mt-8 text-sm sm:text-base font-medium",
+              isSubmitting && "cursor-not-allowed opacity-50"
+            )}
+            aria-disabled={isSubmitting}
           >
-            {isChecking ? "Checking..." : "Submit"}
-          </Button>  */}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit"
+            )}
+          </Button>
         </form>
       </Form>
     </div>
