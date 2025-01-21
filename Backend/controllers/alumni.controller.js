@@ -4,9 +4,19 @@ const Alumni = require('../models/alumni.model.js');
 
 const addAlumni = async (req, res) => {
     try {
-        const jsonDataString = req.body.jsonData;
-        const data = JSON.parse(jsonDataString);
-
+        Object.keys(req.body).forEach((key) => {
+            try {
+              console.log(key)
+              // Try parsing the stringified JSON fields
+              req.body[key] = JSON.parse(req.body[key]);
+            } catch (error) {
+              console.error(`Error parsing ${key}:`, error);
+              // If parsing fails, you can keep the original value or handle the error accordingly
+            }
+          });
+        
+        const data = req.body;
+        console.log(data);
         // Validate transaction ID
         const existingAlumni = await Alumni.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
         if (existingAlumni) {

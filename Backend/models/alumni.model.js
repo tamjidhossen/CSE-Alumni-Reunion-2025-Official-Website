@@ -19,9 +19,10 @@ const alumniSchema = new mongoose.Schema({
         to: { type: String, default: 'Present' }
     },
     prevProfessionalInfo: [{
-        currentDesignation: { type: String, default: '' },
-        currentOrganization: { type: String, default: '' },
-        to: { type: String, default: 'Present' }
+        designation: { type: String },
+        organization: { type: String },
+        from: { type: String },
+        to: { type: String },
     }],
     numberOfParticipantInfo: {
         adult: { type: Number, required: true },
@@ -37,7 +38,7 @@ const alumniSchema = new mongoose.Schema({
     profilePictureInfo: {
         image: { type: String, default: '' }
     }
-});
+}, { timestamps: true });
 
 const alumni = mongoose.model('Alumni', alumniSchema);
 
