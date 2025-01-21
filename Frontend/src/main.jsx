@@ -5,15 +5,33 @@ import Layout from './Layout'
 import Home from './components/Home/Home'
 import Registration from './components/Registration/Registration'
 import Announcements from './components/Announcements/Announcements'
+import AdminLogin from './components/Admin/Login'
+import Dashboard from './components/Admin/Dashboard'
+import ProtectedRoute from './components/Admin/ProtectedRoute'
+import AdminRegister from './components/Admin/Register'
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<Layout />} >
-      <Route path="" element={<Home />} />,
-      <Route path="registration" element={<Registration />} />,
-      <Route path="announcements" element={<Announcements />} />
-    </Route>
+    <>
+      <Route path="/" element={<Layout />}>
+        <Route path="" element={<Home />} />
+        <Route path="registration" element={<Registration />} />
+        <Route path="announcements" element={<Announcements />} />
+      </Route>
+      <Route path="/admin">
+        <Route path="register" element={<AdminRegister />} />
+        <Route path="login" element={<AdminLogin />} />
+        <Route 
+          path="dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+      </Route>
+    </>
   )
 )
 
