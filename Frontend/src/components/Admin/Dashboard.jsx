@@ -16,6 +16,17 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import ModeToggle from "@/components/ui/mode-toggle";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Users,
   UserCheck,
   UserX,
@@ -24,6 +35,7 @@ import {
   School,
   Loader2,
   Baby,
+  Trash2,
   Users as UsersGroup,
 } from "lucide-react";
 
@@ -352,17 +364,60 @@ const dummyStudents = [
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   }).format(date);
 };
 
 const Dashboard = () => {
+  const handleDelete = async (id, type) => {
+    try {
+      const endpoint =
+        type === "alumni"
+          ? `${API_URL}/api/alumni/delete/${id}`
+          : `${API_URL}/api/student/delete/${id}`;
+
+      await axios.delete(endpoint);
+      window.location.reload();
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete registration",
+      });
+    }
+  };
+
+  const handleDeleteAllRejected = async () => {
+    try {
+      const rejectedRegistrations = registrations.filter(
+        (reg) => reg.paymentInfo.status === 2
+      );
+
+      await Promise.all(
+        rejectedRegistrations.map((reg) =>
+          handleDelete(
+            reg._id.$oid,
+            reg.professionalInfo ? "alumni" : "student"
+          )
+        )
+      );
+
+      window.location.reload();
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete all rejected registrations",
+      });
+    }
+  };
+
   const [stats, setStats] = useState({
     approvedCount: 0,
     pendingCount: 0,
@@ -536,39 +591,73 @@ const Dashboard = () => {
 
       {/* Registration Tabs */}
       <Tabs defaultValue="pending" className="mb-8">
-        <TabsList>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="approved">Approved</TabsTrigger>
-          <TabsTrigger value="rejected">Rejected</TabsTrigger>
-        </TabsList>
+  <TabsList className="w-full flex justify-between items-center">
+    <div className="flex">
+      <TabsTrigger value="pending">Pending</TabsTrigger>
+      <TabsTrigger value="approved">Approved</TabsTrigger>
+      <TabsTrigger value="rejected">Rejected</TabsTrigger>
+    </div>
+  </TabsList>
 
-        <TabsContent value="pending">
-          <RegistrationTable
-            registrations={registrations.filter(
-              (reg) => reg.paymentInfo.status === 0
-            )}
-            onStatusUpdate={handleStatusUpdate}
-          />
-        </TabsContent>
+  <TabsContent value="pending">
+    <RegistrationTable
+      registrations={registrations.filter(
+        (reg) => reg.paymentInfo.status === 0
+      )}
+      onStatusUpdate={handleStatusUpdate}
+      onDelete={handleDelete}
+      tabType="pending"
+    />
+  </TabsContent>
 
-        <TabsContent value="approved">
-          <RegistrationTable
-            registrations={registrations.filter(
-              (reg) => reg.paymentInfo.status === 1
-            )}
-            onStatusUpdate={handleStatusUpdate}
-          />
-        </TabsContent>
+  <TabsContent value="approved">
+    <RegistrationTable
+      registrations={registrations.filter(
+        (reg) => reg.paymentInfo.status === 1
+      )}
+      onStatusUpdate={handleStatusUpdate}
+      onDelete={handleDelete}
+      tabType="approved"
+    />
+  </TabsContent>
 
-        <TabsContent value="rejected">
-          <RegistrationTable
-            registrations={registrations.filter(
-              (reg) => reg.paymentInfo.status === 2
-            )}
-            onStatusUpdate={handleStatusUpdate}
-          />
-        </TabsContent>
-      </Tabs>
+  <TabsContent value="rejected">
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-lg font-semibold">Rejected Registrations</h3>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete All
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Rejected Records?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete
+              all rejected registrations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllRejected}>
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+    <RegistrationTable
+      registrations={registrations.filter(
+        (reg) => reg.paymentInfo.status === 2
+      )}
+      onStatusUpdate={handleStatusUpdate}
+      onDelete={handleDelete}
+      tabType="rejected"
+    />
+  </TabsContent>
+</Tabs>
     </div>
   );
 };
@@ -592,11 +681,86 @@ const StatsCard = ({ title, value, pending, icon: Icon, className }) => (
   </Card>
 );
 
-const RegistrationTable = ({ registrations, onStatusUpdate }) => {
-  // Sort registrations by createdAt in descending order
+const RegistrationTable = ({ registrations, onStatusUpdate, onDelete, tabType }) => {
   const sortedRegistrations = [...registrations].sort((a, b) => 
     new Date(b.createdAt.$date) - new Date(a.createdAt.$date)
   );
+
+  const renderActions = (reg) => {
+    const type = reg.professionalInfo ? "alumni" : "student";
+    
+    switch (tabType) {
+      case "pending":
+        return (
+          <>
+            <Button
+              size="sm"
+              onClick={() => onStatusUpdate(reg._id.$oid, type, 1)}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => onStatusUpdate(reg._id.$oid, type, 2)}
+            >
+              Reject
+            </Button>
+          </>
+        );
+      
+      case "approved":
+        return (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => onStatusUpdate(reg._id.$oid, type, 2)}
+          >
+            Reject
+          </Button>
+        );
+      
+      case "rejected":
+        return (
+          <>
+            <Button
+              size="sm"
+              onClick={() => onStatusUpdate(reg._id.$oid, type, 1)}
+              className="bg-green-500 hover:bg-green-600"
+            >
+              Approve
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="destructive">
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Registration?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the registration.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => onDelete(reg._id.$oid, type)}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="rounded-md border">
@@ -612,58 +776,33 @@ const RegistrationTable = ({ registrations, onStatusUpdate }) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedRegistrations.map((reg) => (
-            <TableRow key={reg._id.$oid}>
-              <TableCell>{reg.personalInfo.name}</TableCell>
-              <TableCell>
-                {reg.professionalInfo ? (
-                  <Badge variant="secondary">
-                    <GraduationCap className="h-4 w-4 mr-1" />
-                    Alumni
-                  </Badge>
-                ) : (
-                  <Badge>
-                    <School className="h-4 w-4 mr-1" />
-                    Student
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>{reg.paymentInfo.transactionId}</TableCell>
-              <TableCell>৳{reg.paymentInfo.totalAmount}</TableCell>
-              <TableCell className="text-muted-foreground text-sm">
-                {formatDate(reg.createdAt.$date)}
-              </TableCell>
-              <TableCell className="space-x-2">
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    onStatusUpdate(
-                      reg._id.$oid,
-                      reg.professionalInfo ? "alumni" : "student",
-                      1
-                    )
-                  }
-                  className="bg-green-500 hover:bg-green-600"
-                >
-                  Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() =>
-                    onStatusUpdate(
-                      reg._id.$oid,
-                      reg.professionalInfo ? "alumni" : "student",
-                      2
-                    )
-                  }
-                >
-                  Reject
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
+  {sortedRegistrations.map((reg) => (
+    <TableRow key={reg._id.$oid}>
+      <TableCell>{reg.personalInfo.name}</TableCell>
+      <TableCell>
+        {reg.professionalInfo ? (
+          <Badge variant="secondary">
+            <GraduationCap className="h-4 w-4 mr-1" />
+            Alumni
+          </Badge>
+        ) : (
+          <Badge>
+            <School className="h-4 w-4 mr-1" />
+            Student
+          </Badge>
+        )}
+      </TableCell>
+      <TableCell>{reg.paymentInfo.transactionId}</TableCell>
+      <TableCell>৳{reg.paymentInfo.totalAmount}</TableCell>
+      <TableCell className="text-muted-foreground text-sm">
+        {formatDate(reg.createdAt.$date)}
+      </TableCell>
+      <TableCell className="space-x-2">
+        {renderActions(reg)}
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
       </Table>
     </div>
   );
