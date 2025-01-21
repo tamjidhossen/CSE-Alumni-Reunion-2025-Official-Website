@@ -350,6 +350,18 @@ const dummyStudents = [
   },
 ];
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  }).format(date);
+};
+
 const Dashboard = () => {
   const [stats, setStats] = useState({
     approvedCount: 0,
@@ -580,70 +592,81 @@ const StatsCard = ({ title, value, pending, icon: Icon, className }) => (
   </Card>
 );
 
-const RegistrationTable = ({ registrations, onStatusUpdate }) => (
-  <div className="rounded-md border">
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Transaction ID</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {registrations.map((reg) => (
-          <TableRow key={reg._id}>
-            <TableCell>{reg.personalInfo.name}</TableCell>
-            <TableCell>
-              {reg.professionalInfo ? (
-                <Badge variant="secondary">
-                  <GraduationCap className="h-4 w-4 mr-1" />
-                  Alumni
-                </Badge>
-              ) : (
-                <Badge>
-                  <School className="h-4 w-4 mr-1" />
-                  Student
-                </Badge>
-              )}
-            </TableCell>
-            <TableCell>{reg.paymentInfo.transactionId}</TableCell>
-            <TableCell>৳{reg.paymentInfo.totalAmount}</TableCell>
-            <TableCell className="space-x-2">
-              <Button
-                size="sm"
-                onClick={() =>
-                  onStatusUpdate(
-                    reg._id,
-                    reg.professionalInfo ? "alumni" : "student",
-                    1
-                  )
-                }
-                className="bg-green-500 hover:bg-green-600"
-              >
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() =>
-                  onStatusUpdate(
-                    reg._id,
-                    reg.professionalInfo ? "alumni" : "student",
-                    2
-                  )
-                }
-              >
-                Reject
-              </Button>
-            </TableCell>
+const RegistrationTable = ({ registrations, onStatusUpdate }) => {
+  // Sort registrations by createdAt in descending order
+  const sortedRegistrations = [...registrations].sort((a, b) => 
+    new Date(b.createdAt.$date) - new Date(a.createdAt.$date)
+  );
+
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Transaction ID</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Registered On</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </div>
-);
+        </TableHeader>
+        <TableBody>
+          {sortedRegistrations.map((reg) => (
+            <TableRow key={reg._id.$oid}>
+              <TableCell>{reg.personalInfo.name}</TableCell>
+              <TableCell>
+                {reg.professionalInfo ? (
+                  <Badge variant="secondary">
+                    <GraduationCap className="h-4 w-4 mr-1" />
+                    Alumni
+                  </Badge>
+                ) : (
+                  <Badge>
+                    <School className="h-4 w-4 mr-1" />
+                    Student
+                  </Badge>
+                )}
+              </TableCell>
+              <TableCell>{reg.paymentInfo.transactionId}</TableCell>
+              <TableCell>৳{reg.paymentInfo.totalAmount}</TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {formatDate(reg.createdAt.$date)}
+              </TableCell>
+              <TableCell className="space-x-2">
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    onStatusUpdate(
+                      reg._id.$oid,
+                      reg.professionalInfo ? "alumni" : "student",
+                      1
+                    )
+                  }
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() =>
+                    onStatusUpdate(
+                      reg._id.$oid,
+                      reg.professionalInfo ? "alumni" : "student",
+                      2
+                    )
+                  }
+                >
+                  Reject
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
 
 export default Dashboard;
