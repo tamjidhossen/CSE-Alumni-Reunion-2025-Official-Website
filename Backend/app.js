@@ -15,44 +15,6 @@ const paymentRoutes = require('./routes/payment.routes.js')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 
-app.use('/uploads', cors(), express.static('uploads'));
-app.use((req, res, next) => {
-    console.log(`[${req.method}] ${req.url}`);
-    console.log('Origin:', req.headers.origin);
-    console.log('Headers:', req.headers);
-    next();
-});
-
-
-const parseRequestBody = (body) => {
-    const parsedBody = {};
-
-    for (const [key, value] of Object.entries(body)) {
-        try {
-            // Attempt to parse the value if it's a string
-            parsedBody[key] = typeof value === 'string' ? JSON.parse(value) : value;
-        } catch (error) {
-            // If parsing fails, keep the original value
-            parsedBody[key] = value;
-        }
-    }
-
-    return parsedBody;
-};
-
-// Middleware to handle parsing
-app.use((req, res, next) => {
-    if (req.body) {
-        req.body = parseRequestBody(req.body);
-    }
-    next();
-});
-
-
-app.get('/', (req, res) => {
-    res.send("Hello World!");
-});
-
 app.use('/api/registration', registrationRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/announcement', announcementRoutes);

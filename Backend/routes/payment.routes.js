@@ -5,7 +5,5 @@ const paymentController = require('../controllers/payment.controller.js');
 const adminAuth = require('../middleware/adminAuth.middleware.js')
 router.get('/check/:roll/:reg/:transactionId', paymentController.paymentCheck);
 router.get('/Update/:transactionId/:status', adminAuth.authAdmin, paymentController.paymentUpdate);
-router.get('/', (req, res) => {
-    res.send("Hello World!");
-});
+
 module.exports = router;

@@ -17,11 +17,8 @@ const studentSchema = new mongoose.Schema({
         mobileBankingName: { type: String, required: true },
         status: { type: Number, required: true },
         transactionId: { type: String, required: true }
-    },
-    profilePictureInfo: {
-        image: { type: String, default: '' }
     }
-});
+}, { timestamps: true });
 
 const student = mongoose.model('Student', studentSchema);
 

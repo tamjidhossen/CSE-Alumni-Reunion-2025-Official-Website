@@ -5,10 +5,20 @@ const Student = require('../models/student.model.js');
 // Add new student
 const addStudent = async (req, res) => {
     try {
-        // Parse and validate data from the request body
-        const jsonDataString = req.body.jsonData;
-        const data = JSON.parse(jsonDataString);
+        Object.keys(req.body).forEach((key) => {
+            try {
+                console.log(key)
+                // Try parsing the stringified JSON fields
+                req.body[key] = JSON.parse(req.body[key]);
+            } catch (error) {
+                console.error(`Error parsing ${key}:`, error);
+                // If parsing fails, you can keep the original value or handle the error accordingly
+            }
+        });
 
+        console.log(req.body)
+        // Parse and validate data from the request body
+        const data = req.body;
         // Validate transaction ID
         const existingStudent = await Student.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
         if (existingStudent) {
@@ -35,43 +45,15 @@ const addStudent = async (req, res) => {
             personalInfo: data.personalInfo,
             contactInfo: data.contactInfo,
             paymentInfo: data.paymentInfo,
-            profilePictureInfo: {}, // Placeholder for the image
         });
 
         // Save the student data to the database
         const savedStudent = await student.save();
-
-        // Handle image saving after database insertion
-        if (req.file) {
-            const uploadDir = path.join(__dirname, '../uploads/images');
-            const filePath = `${uploadDir}/${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
-
-            // Ensure the upload directory exists
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            // Save the image file to the disk
-            fs.writeFile(filePath, req.file.buffer, async (err) => {
-                if (err) {
-                    // Rollback database entry if the file saving fails
-                    await Student.findByIdAndDelete(savedStudent._id);
-                    return res.status(500).json({ success: false, message: 'Failed to save the image' });
-                }
-
-                // Update the student record with the image path
-                savedStudent.profilePictureInfo.image = filePath;
-                await savedStudent.save();
-
-                res.status(201).json({
-                    success: true,
-                    message: 'Student registered successfully',
-                    data: savedStudent,
-                });
-            });
-        } else {
-            return res.status(400).json({ success: false, message: 'Profile picture is required' });
-        }
+        res.status(201).json({
+            success: true,
+            message: 'Student registered successfully',
+            data: savedStudent,
+        });
     } catch (error) {
         res.status(500).json({
             success: false,

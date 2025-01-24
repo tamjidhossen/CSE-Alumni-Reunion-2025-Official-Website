@@ -16,6 +16,7 @@ const alumniSchema = new mongoose.Schema({
     professionalInfo: {
         currentDesignation: { type: String, default: '' },
         currentOrganization: { type: String, default: '' },
+        from: { type: String },
         to: { type: String, default: 'Present' }
     },
     prevProfessionalInfo: [{

@@ -6,15 +6,15 @@ const addAlumni = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-              console.log(key)
-              // Try parsing the stringified JSON fields
-              req.body[key] = JSON.parse(req.body[key]);
+                console.log(key)
+                // Try parsing the stringified JSON fields
+                req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
-              console.error(`Error parsing ${key}:`, error);
-              // If parsing fails, you can keep the original value or handle the error accordingly
+                console.error(`Error parsing ${key}:`, error);
+                // If parsing fails, you can keep the original value or handle the error accordingly
             }
-          });
-        
+        });
+
         const data = req.body;
         console.log(data);
         // Validate transaction ID
@@ -94,14 +94,6 @@ const getAlumni = async (req, res) => {
     try {
         // Fetch all alumni from the database
         const alumni = await Alumni.find();
-
-        // If no alumni found
-        if (alumni.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No alumni found.',
-            });
-        }
 
         // Return the alumni data
         res.status(200).json({
