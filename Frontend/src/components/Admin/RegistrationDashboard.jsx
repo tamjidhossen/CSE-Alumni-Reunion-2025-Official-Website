@@ -378,7 +378,7 @@ const RegistrationTable = ({
 }) => {
   // Sort registrations by date descending
   const sortedRegistrations = [...registrations].sort(
-    (a, b) => new Date(b.createdAt.$date) - new Date(a.createdAt.$date)
+    (a, b) => new Date(b.createAt) - new Date(a.createAt)
   );
 
   const renderActions = (reg) => {
@@ -554,7 +554,7 @@ const RegistrationTable = ({
                     </div>
 
                     <div className="text-sm text-muted-foreground">
-                      {formatDate(reg.createdAt.$date)}
+                      {formatDate(reg.createAt)}
                     </div>
                     <div className="hidden lg:flex justify-end col-span-2 sm:col-span-1">
                       {renderActions(reg)}
