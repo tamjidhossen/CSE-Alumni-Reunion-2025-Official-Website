@@ -201,7 +201,7 @@ const RegistrationDashboard = () => {
       await Promise.all(
         rejectedRegistrations.map((reg) =>
           handleDelete(
-            reg._id.$oid,
+            reg._id,
             reg.professionalInfo ? "alumni" : "student"
           )
         )
@@ -399,7 +399,7 @@ const RegistrationTable = ({
               size="sm"
               onClick={(e) =>
                 handleButtonClick(e, () =>
-                  onStatusUpdate(reg._id.$oid, type, 1)
+                  onStatusUpdate(reg._id, type, 1)
                 )
               }
               className="bg-green-500 hover:bg-green-600 w-auto sm:w-auto"
@@ -414,7 +414,7 @@ const RegistrationTable = ({
               variant="destructive"
               onClick={(e) =>
                 handleButtonClick(e, () =>
-                  onStatusUpdate(reg._id.$oid, type, 2)
+                  onStatusUpdate(reg._id, type, 2)
                 )
               }
               className="w-full sm:w-auto"
@@ -431,7 +431,7 @@ const RegistrationTable = ({
             size="sm"
             variant="destructive"
             onClick={(e) =>
-              handleButtonClick(e, () => onStatusUpdate(reg._id.$oid, type, 2))
+              handleButtonClick(e, () => onStatusUpdate(reg._id, type, 2))
             }
             className="w-auto sm:w-auto whitespace-nowrap"
           >
@@ -447,7 +447,7 @@ const RegistrationTable = ({
               size="sm"
               onClick={(e) =>
                 handleButtonClick(e, () =>
-                  onStatusUpdate(reg._id.$oid, type, 1)
+                  onStatusUpdate(reg._id, type, 1)
                 )
               }
               className="bg-green-500 hover:bg-green-600 w-full sm:w-auto"
@@ -485,7 +485,7 @@ const RegistrationTable = ({
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={(e) =>
-                      handleButtonClick(e, () => onDelete(reg._id.$oid, type))
+                      handleButtonClick(e, () => onDelete(reg._id, type))
                     }
                   >
                     Delete
@@ -518,8 +518,8 @@ const RegistrationTable = ({
         {/* Table Body */}
         <div className="divide-y divide-border">
           {sortedRegistrations.map((reg) => (
-            <Accordion type="single" collapsible key={reg._id.$oid}>
-              <AccordionItem value={reg._id.$oid} className="border-0">
+            <Accordion type="single" collapsible key={reg._id}>
+              <AccordionItem value={reg._id} className="border-0">
                 {/* Accordion Header/Trigger */}
                 <AccordionTrigger className="hover:no-underline w-full transition-colors hover:bg-muted/50 [&>svg]:hidden">
                   <div className="flex flex-col lg:grid lg:grid-cols-6 lg:gap-4 w-full px-6 py-4">
