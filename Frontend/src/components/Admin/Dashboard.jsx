@@ -3,18 +3,9 @@ import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_URL } from "@/lib/authConfig";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import ModeToggle from "@/components/ui/mode-toggle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,10 +17,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Users,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   UserCheck,
-  UserX,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+  Building,
+  Briefcase,
+  Calendar,
+  CreditCard,
+  Users2,
+  CheckCircle2,
   Wallet,
   GraduationCap,
   School,
@@ -538,10 +544,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <ModeToggle />
       </div>
 
       {/* Stats Grid */}
@@ -591,73 +596,75 @@ const Dashboard = () => {
 
       {/* Registration Tabs */}
       <Tabs defaultValue="pending" className="mb-8">
-  <TabsList className="w-full flex justify-between items-center">
-    <div className="flex">
-      <TabsTrigger value="pending">Pending</TabsTrigger>
-      <TabsTrigger value="approved">Approved</TabsTrigger>
-      <TabsTrigger value="rejected">Rejected</TabsTrigger>
-    </div>
-  </TabsList>
+        <TabsList className="w-full flex justify-between items-center">
+          <div className="flex">
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="approved">Approved</TabsTrigger>
+            <TabsTrigger value="rejected">Rejected</TabsTrigger>
+          </div>
+        </TabsList>
 
-  <TabsContent value="pending">
-    <RegistrationTable
-      registrations={registrations.filter(
-        (reg) => reg.paymentInfo.status === 0
-      )}
-      onStatusUpdate={handleStatusUpdate}
-      onDelete={handleDelete}
-      tabType="pending"
-    />
-  </TabsContent>
+        <TabsContent value="pending">
+          <RegistrationTable
+            registrations={registrations.filter(
+              (reg) => reg.paymentInfo.status === 0
+            )}
+            onStatusUpdate={handleStatusUpdate}
+            onDelete={handleDelete}
+            tabType="pending"
+          />
+        </TabsContent>
 
-  <TabsContent value="approved">
-    <RegistrationTable
-      registrations={registrations.filter(
-        (reg) => reg.paymentInfo.status === 1
-      )}
-      onStatusUpdate={handleStatusUpdate}
-      onDelete={handleDelete}
-      tabType="approved"
-    />
-  </TabsContent>
+        <TabsContent value="approved">
+          <RegistrationTable
+            registrations={registrations.filter(
+              (reg) => reg.paymentInfo.status === 1
+            )}
+            onStatusUpdate={handleStatusUpdate}
+            onDelete={handleDelete}
+            tabType="approved"
+          />
+        </TabsContent>
 
-  <TabsContent value="rejected">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-semibold">Rejected Registrations</h3>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button variant="destructive" size="sm">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete All
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Rejected Records?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete
-              all rejected registrations.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAllRejected}>
-              Delete All
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-    <RegistrationTable
-      registrations={registrations.filter(
-        (reg) => reg.paymentInfo.status === 2
-      )}
-      onStatusUpdate={handleStatusUpdate}
-      onDelete={handleDelete}
-      tabType="rejected"
-    />
-  </TabsContent>
-</Tabs>
+        <TabsContent value="rejected">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Rejected Registrations</h3>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Delete All Rejected Records?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    all rejected registrations.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAllRejected}>
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+          <RegistrationTable
+            registrations={registrations.filter(
+              (reg) => reg.paymentInfo.status === 2
+            )}
+            onStatusUpdate={handleStatusUpdate}
+            onDelete={handleDelete}
+            tabType="rejected"
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
@@ -681,129 +688,432 @@ const StatsCard = ({ title, value, pending, icon: Icon, className }) => (
   </Card>
 );
 
-const RegistrationTable = ({ registrations, onStatusUpdate, onDelete, tabType }) => {
-  const sortedRegistrations = [...registrations].sort((a, b) => 
-    new Date(b.createdAt.$date) - new Date(a.createdAt.$date)
+const RegistrationTable = ({
+  registrations,
+  onStatusUpdate,
+  onDelete,
+  tabType,
+}) => {
+  // Sort registrations by date descending
+  const sortedRegistrations = [...registrations].sort(
+    (a, b) => new Date(b.createdAt.$date) - new Date(a.createdAt.$date)
   );
 
   const renderActions = (reg) => {
     const type = reg.professionalInfo ? "alumni" : "student";
-    
+
+    // Handler to prevent event propagation
+    const handleButtonClick = (e, action) => {
+      e.preventDefault();
+      e.stopPropagation();
+      action();
+    };
+
     switch (tabType) {
       case "pending":
         return (
-          <>
+          <div className="flex flex-col lg:flex-row items-end sm:items-center gap-2">
             <Button
               size="sm"
-              onClick={() => onStatusUpdate(reg._id.$oid, type, 1)}
-              className="bg-green-500 hover:bg-green-600"
+              onClick={(e) =>
+                handleButtonClick(e, () =>
+                  onStatusUpdate(reg._id.$oid, type, 1)
+                )
+              }
+              className="bg-green-500 hover:bg-green-600 w-auto sm:w-auto"
             >
-              Approve
+              <CheckCircle2 className="h-4 w-4 mr-1" />
+              <span className="whitespace-nowrap hidden md:inline">
+                Approve
+              </span>
             </Button>
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => onStatusUpdate(reg._id.$oid, type, 2)}
+              onClick={(e) =>
+                handleButtonClick(e, () =>
+                  onStatusUpdate(reg._id.$oid, type, 2)
+                )
+              }
+              className="w-full sm:w-auto"
             >
-              Reject
+              <X className="h-4 w-4 mr-1" />
+              <span className="whitespace-nowrap hidden md:inline">Reject</span>
             </Button>
-          </>
+          </div>
         );
-      
+
       case "approved":
         return (
           <Button
             size="sm"
             variant="destructive"
-            onClick={() => onStatusUpdate(reg._id.$oid, type, 2)}
+            onClick={(e) =>
+              handleButtonClick(e, () => onStatusUpdate(reg._id.$oid, type, 2))
+            }
+            className="w-auto sm:w-auto whitespace-nowrap"
           >
-            Reject
+            <X className="h-4 w-4 mr-1" />
+            <span className="whitespace-nowrap hidden md:inline">Reject</span>
           </Button>
         );
-      
+
       case "rejected":
         return (
-          <>
+          <div className="flex flex-col lg:flex-row items-end sm:items-center gap-2">
             <Button
               size="sm"
-              onClick={() => onStatusUpdate(reg._id.$oid, type, 1)}
-              className="bg-green-500 hover:bg-green-600"
+              onClick={(e) =>
+                handleButtonClick(e, () =>
+                  onStatusUpdate(reg._id.$oid, type, 1)
+                )
+              }
+              className="bg-green-500 hover:bg-green-600 w-full sm:w-auto"
             >
-              Approve
+              <CheckCircle2 className="h-4 w-4 mr-1" />
+              <span className="whitespace-nowrap hidden md:inline">
+                Approve
+              </span>
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" variant="destructive">
-                  Delete
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="w-full sm:w-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  <span className="whitespace-nowrap hidden md:inline">
+                    Delete
+                  </span>
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Registration?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the registration.
+                    This action cannot be undone. This will permanently delete
+                    the registration.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={() => onDelete(reg._id.$oid, type)}
+                  <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) =>
+                      handleButtonClick(e, () => onDelete(reg._id.$oid, type))
+                    }
                   >
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </>
+          </div>
         );
-      
+
       default:
         return null;
     }
   };
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Transaction ID</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Registered On</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-  {sortedRegistrations.map((reg) => (
-    <TableRow key={reg._id.$oid}>
-      <TableCell>{reg.personalInfo.name}</TableCell>
-      <TableCell>
-        {reg.professionalInfo ? (
-          <Badge variant="secondary">
-            <GraduationCap className="h-4 w-4 mr-1" />
-            Alumni
-          </Badge>
-        ) : (
-          <Badge>
-            <School className="h-4 w-4 mr-1" />
-            Student
-          </Badge>
-        )}
-      </TableCell>
-      <TableCell>{reg.paymentInfo.transactionId}</TableCell>
-      <TableCell>৳{reg.paymentInfo.totalAmount}</TableCell>
-      <TableCell className="text-muted-foreground text-sm">
-        {formatDate(reg.createdAt.$date)}
-      </TableCell>
-      <TableCell className="space-x-2">
-        {renderActions(reg)}
-      </TableCell>
-    </TableRow>
-  ))}
-</TableBody>
-      </Table>
+    <div className="w-full overflow-hidden rounded-lg border bg-background">
+      {/* Table Container */}
+      <div className="min-w-full">
+        {/* Table Header */}
+        <div className="hidden sticky top-0 z-10 md:grid grid-cols-6 gap-4 px-6 py-4 border-b bg-muted/50 backdrop-blur supports-[backdrop-filter]:bg-muted/50">
+          <div className="text-sm font-semibold">Name</div>
+          <div className="text-sm font-semibold">Type</div>
+          <div className="text-sm font-semibold">Transaction ID</div>
+          <div className="text-sm font-semibold">Amount</div>
+          <div className="text-sm font-semibold">Registered On</div>
+          <div className="text-sm font-semibold text-right">Actions</div>
+        </div>
+
+        {/* Table Body */}
+        <div className="divide-y divide-border">
+          {sortedRegistrations.map((reg) => (
+            <Accordion type="single" collapsible key={reg._id.$oid}>
+              <AccordionItem value={reg._id.$oid} className="border-0">
+                {/* Accordion Header/Trigger */}
+                <AccordionTrigger className="hover:no-underline w-full transition-colors hover:bg-muted/50 [&>svg]:hidden">
+                  <div className="flex flex-col lg:grid lg:grid-cols-6 lg:gap-4 w-full px-6 py-4">
+                    <div className="font-medium truncate">
+                      {reg.personalInfo.name}
+                    </div>
+
+                    <div className="items-center">
+                      {reg.professionalInfo ? (
+                        <Badge variant="secondary" className="font-normal">
+                          <GraduationCap className="h-4 w-4 mr-1" />
+                          <span className="hidden lg:inline">Alumni</span>
+                        </Badge>
+                      ) : (
+                        <Badge className="font-normal">
+                          <School className="h-4 w-4 mr-1" />
+                          <span className="hidden lg:inline">Student</span>
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="lg:hidden py-2 text-sm font-extrabold">
+                      ৳{reg.paymentInfo.totalAmount}
+                    </div>
+
+                    <div className="text-sm text-muted-foreground">
+                      {reg.paymentInfo.transactionId}
+                    </div>
+
+                    <div className="hidden lg:block text-sm font-medium">
+                      ৳{reg.paymentInfo.totalAmount}
+                    </div>
+
+                    <div className="text-sm text-muted-foreground">
+                      {formatDate(reg.createdAt.$date)}
+                    </div>
+                    <div className="hidden lg:flex justify-end col-span-2 sm:col-span-1">
+                      {renderActions(reg)}
+                    </div>
+                  </div>
+                  <div className="lg:hidden px-6 py-4">
+                    {renderActions(reg)}
+                  </div>
+                </AccordionTrigger>
+
+                {/* Accordion Content */}
+                <AccordionContent>
+                  <div className="px-6 py-4 bg-muted/30">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      {/* Profile & Contact Section */}
+                      <div className="lg:col-span-4 space-y-4">
+                        {/* Profile Card */}
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <div className="flex flex-col items-center text-center">
+                              <Avatar className="h-24 w-24 border-2 mb-4">
+                                <AvatarImage
+                                  src={reg.profilePictureInfo.image}
+                                />
+                                <AvatarFallback className="text-xl">
+                                  {reg.personalInfo.name
+                                    .substring(0, 2)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="space-y-4">
+                                <CardTitle className="text-xl">
+                                  {reg.personalInfo.name}
+                                </CardTitle>
+
+                                <div className="grid gap-3">
+                                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>{reg.personalInfo.session}</span>
+                                  </div>
+                                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                    <CreditCard className="h-4 w-4" />
+                                    <span>Roll: {reg.personalInfo.roll}</span>
+                                  </div>
+                                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                    <Users2 className="h-4 w-4" />
+                                    <span>
+                                      Reg: {reg.personalInfo.registrationNo}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                        </Card>
+
+                        {/* Contact Info Card */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                              Contact Information
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {reg.contactInfo.mobile}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm break-all">
+                                {reg.contactInfo.email}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">
+                                {reg.contactInfo.currentAddress}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Professional Info Section */}
+                      <div className="lg:col-span-5">
+                        {reg.professionalInfo && (
+                          <Card className="h-full">
+                            <CardHeader>
+                              <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                                Professional Information
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                              <div className="p-4 bg-muted rounded-lg space-y-3">
+                                <h4 className="font-medium text-sm">
+                                  Current Position
+                                </h4>
+                                <div className="space-y-2">
+                                  <div className="flex items-center text-sm gap-2">
+                                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                    {reg.professionalInfo.currentDesignation}
+                                  </div>
+                                  <div className="flex items-center text-sm gap-2">
+                                    <Building className="h-4 w-4 text-muted-foreground" />
+                                    {reg.professionalInfo.currentOrganization}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {reg.prevProfessionalInfo?.length > 0 && (
+                                <div className="p-4 bg-muted rounded-lg space-y-3">
+                                  <h4 className="font-medium text-sm">
+                                    Previous Experience
+                                  </h4>
+                                  {reg.prevProfessionalInfo.map((prev, idx) => (
+                                    <div key={idx} className="space-y-2">
+                                      <div className="flex items-center text-sm gap-2">
+                                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                        {prev.designation}
+                                      </div>
+                                      <div className="flex items-center text-sm gap-2">
+                                        <Building className="h-4 w-4 text-muted-foreground" />
+                                        {prev.organization}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+
+                      {/* Participants & Payment Section */}
+                      <div className="lg:col-span-3 space-y-4">
+                        {/* Participants Card */}
+                        {reg.numberOfParticipantInfo && (
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                                Participants
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm text-muted-foreground">
+                                    Adults
+                                  </span>
+                                  <span className="font-semibold">
+                                    {reg.numberOfParticipantInfo.adult}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm text-muted-foreground">
+                                    Children
+                                  </span>
+                                  <span className="font-semibold">
+                                    {reg.numberOfParticipantInfo.child}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between border-t pt-2 mt-2">
+                                  <span className="text-sm font-medium">
+                                    Total
+                                  </span>
+                                  <span className="font-semibold">
+                                    {reg.numberOfParticipantInfo.total}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Payment Details Card */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                              Payment Details
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                Method
+                              </span>
+                              <Badge variant="outline">
+                                {reg.paymentInfo.mobileBankingName}
+                              </Badge>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                Transaction ID
+                              </span>
+                              <span className="text-sm font-mono">
+                                {reg.paymentInfo.transactionId}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                Amount
+                              </span>
+                              <span className="text-sm font-semibold">
+                                ৳{reg.paymentInfo.totalAmount}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">
+                                Status
+                              </span>
+                              <Badge
+                                variant={
+                                  reg.paymentInfo.status === 0
+                                    ? "default"
+                                    : reg.paymentInfo.status === 1
+                                    ? "success"
+                                    : "destructive"
+                                }
+                              >
+                                {reg.paymentInfo.status === 0
+                                  ? "Pending"
+                                  : reg.paymentInfo.status === 1
+                                  ? "Approved"
+                                  : "Rejected"}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
