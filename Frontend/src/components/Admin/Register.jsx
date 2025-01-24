@@ -42,7 +42,7 @@ export default function AdminRegister() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
+    
     const passwordValidation = validatePassword(formData.password);
 
     if (!passwordValidation.isValid) {
