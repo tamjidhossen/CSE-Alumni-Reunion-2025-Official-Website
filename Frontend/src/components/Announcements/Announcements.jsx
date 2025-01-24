@@ -11,31 +11,6 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, ExternalLink } from "lucide-react";
 import { API_URL } from "@/lib/authConfig";
 
-const dummyAnnouncements = [
-  {
-    _id: "1",
-    title: "Early Bird Registration Now Open!",
-    description:
-      "Register before May 1st to get 20% off on registration fees. Limited slots available.",
-    link: "https://example.com/register",
-    createdAt: "2024-03-20T09:00:00Z",
-  },
-  {
-    _id: "2",
-    title: "Venue Confirmed",
-    description:
-      "We are pleased to announce that the reunion will be held at International Convention Center.",
-    createdAt: "2024-03-15T14:30:00Z",
-  },
-  {
-    _id: "3",
-    title: "Call for Memories",
-    description:
-      "Share your favorite memories and photos for our reunion yearbook.",
-    link: "https://example.com/memories",
-    createdAt: "2024-03-10T11:00:00Z",
-  },
-];
 
 const formatDate = (dateString) => {
   return new Intl.DateTimeFormat("en-US", {
@@ -47,49 +22,45 @@ const formatDate = (dateString) => {
   }).format(new Date(dateString));
 };
 const Announcements = () => {
-  // const [announcements, setAnnouncements] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  //for dummy data testing
-  const [announcements, setAnnouncements] = useState(
-    dummyAnnouncements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  );
 
-  // useEffect(() => {
-  //   const fetchAnnouncements = async () => {
-  //     try {
-  //       const response = await axios.get(`${API_URL}/api/announcement/get-announcement`);
-  //       const data = response.data || [];
-  //       const sortedAnnouncements = data.sort(
-  //         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  //       );
-  //       setAnnouncements(sortedAnnouncements);
-  //     } catch {
-  //       setError("Failed to fetch announcements");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/announcement/get-announcement`);
+        const data = response.data || [];
+        const sortedAnnouncements = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setAnnouncements(sortedAnnouncements);
+      } catch {
+        setError("Failed to fetch announcements");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   fetchAnnouncements();
-  // }, []);
+    fetchAnnouncements();
+  }, []);
 
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <p className="text-muted-foreground">Loading announcements...</p>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading announcements...</p>
+      </div>
+    );
+  }
 
-  // if (error) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <p className="text-red-500">{error}</p>
-  //     </div>
-  //   );
-  // }
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen p-3 sm:mb-12">

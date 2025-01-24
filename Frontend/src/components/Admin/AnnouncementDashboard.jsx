@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { API_URL } from "@/lib/authConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,40 +29,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Dummy data
-const dummyAnnouncements = [
-  {
-    _id: "1",
-    title: "Early Bird Registration Now Open!",
-    description:
-      "Register before May 1st to get 20% off on registration fees. Limited slots available.",
-    link: "https://example.com/register",
-    createdAt: "2024-03-20T09:00:00Z",
-  },
-  {
-    _id: "2",
-    title: "Venue Confirmed",
-    description:
-      "We are pleased to announce that the reunion will be held at International Convention Center.",
-    createdAt: "2024-03-15T14:30:00Z",
-  },
-  {
-    _id: "3",
-    title: "Call for Memories",
-    description:
-      "Share your favorite memories and photos for our reunion yearbook.",
-    link: "https://example.com/memories",
-    createdAt: "2024-03-10T11:00:00Z",
-  },
-];
 
 export default function AnnouncementsDashboard() {
-  const [announcements, setAnnouncements] = useState(
-    dummyAnnouncements.sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    )
-  );
+  const [announcements, setAnnouncements] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -68,30 +41,68 @@ export default function AnnouncementsDashboard() {
   });
   const { toast } = useToast();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newAnnouncement = {
-      _id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString(),
-    };
-    setAnnouncements([newAnnouncement, ...announcements]);
-    setIsDialogOpen(false);
-    setFormData({ title: "", description: "", link: "" });
-    toast({
-      title: "Success",
-      description: "Announcement added successfully",
-    });
+  // Fetch announcements
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/announcement/get-announcement`);
+      const sortedAnnouncements = response.data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setAnnouncements(sortedAnnouncements);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch announcements"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    setAnnouncements(
-      announcements.filter((announcement) => announcement._id !== id)
-    );
-    toast({
-      title: "Success",
-      description: "Announcement deleted successfully",
-    });
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`${API_URL}/api/announcement/add`, formData);
+      
+      // Add new announcement to state
+      setAnnouncements([response.data, ...announcements]);
+      setIsDialogOpen(false);
+      setFormData({ title: "", description: "", link: "" });
+      
+      toast({
+        title: "Success",
+        description: "Announcement added successfully",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.message || "Failed to add announcement"
+      });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`${API_URL}/api/announcement/delete/${id}`);
+      setAnnouncements(announcements.filter(announcement => announcement._id !== id));
+      
+      toast({
+        title: "Success",
+        description: "Announcement deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete announcement"
+      });
+    }
   };
 
   const formatDate = (dateString) => {
@@ -103,6 +114,17 @@ export default function AnnouncementsDashboard() {
       minute: "2-digit",
     });
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Loading announcements...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">

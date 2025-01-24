@@ -47,11 +47,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const ADULT_FEE = 200;
-const CHILD_FEE = 100;
-const STUDENT_FEE = 150;
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+import {
+  ADULT_FEE,
+  CHILD_FEE,
+  STUDENT_FEE,
+  MAX_FILE_SIZE,
+} from "@/lib/authConfig";
 
 const formSchema = (isCurrentStudent) =>
   z.object({
@@ -292,6 +293,28 @@ export default function Registration() {
         *
       </span>
     ) : null;
+  };
+
+  const validImageTypes = ["image/jpeg", "image/png"];
+
+  const validateFile = (file) => {
+    if (!validImageTypes.includes(file.type)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please upload a valid image file (JPEG, PNG)",
+      });
+      return false;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Please upload an image smaller than 2MB",
+      });
+      return false;
+    }
+    return true;
   };
 
   // default values for the form
@@ -1346,16 +1369,11 @@ export default function Registration() {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              if (file.size > MAX_FILE_SIZE) {
-                                toast({
-                                  variant: "destructive",
-                                  title: "File too large",
-                                  description:
-                                    "Please upload an image smaller than 2MB",
-                                });
-                                return;
+                              if (validateFile(file)) {
+                                onChange(file);
+                              } else {
+                                e.target.value = ''; // Clear the input
                               }
-                              onChange(file);
                             }
                           }}
                           {...field}

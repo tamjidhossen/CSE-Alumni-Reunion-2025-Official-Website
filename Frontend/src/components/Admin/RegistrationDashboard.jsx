@@ -45,329 +45,6 @@ import {
   Users as UsersGroup,
 } from "lucide-react";
 
-const dummyAlumni = [
-  {
-    _id: { $oid: "678f3ed7bde558432094b571" },
-    personalInfo: {
-      name: "Md. Rakib Hasan",
-      roll: 1801001,
-      registrationNo: 18001,
-      session: "2018-2019",
-      passingYear: "2022",
-    },
-    contactInfo: {
-      mobile: "01711234567",
-      email: "rakib.hasan@gmail.com",
-      currentAddress: "Banani, Dhaka",
-    },
-    professionalInfo: {
-      currentDesignation: "Software Engineer",
-      currentOrganization: "Brain Station 23",
-      from: "2023-12-31T18:00:00.000Z",
-      to: "Present",
-    },
-    prevProfessionalInfo: [
-      {
-        designation: "Junior Developer",
-        organization: "TigerIT Bangladesh",
-        from: "2021-12-31T18:00:00.000Z",
-        to: "2022-10-31T18:00:00.000Z",
-        _id: { $oid: "678f3ed7bde558432094b572" },
-      },
-    ],
-    numberOfParticipantInfo: { adult: 2, child: 1, total: 3 },
-    paymentInfo: {
-      totalAmount: 500,
-      mobileBankingName: "Bkash",
-      status: 1,
-      transactionId: "BKS123456789",
-    },
-    profilePictureInfo: {
-      image: "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:29:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:29:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b573" },
-    personalInfo: {
-      name: "Fatima Akter",
-      roll: 1701015,
-      registrationNo: 17015,
-      session: "2017-2018",
-      passingYear: "2021",
-    },
-    contactInfo: {
-      mobile: "01819876543",
-      email: "fatima.akter@outlook.com",
-      currentAddress: "Uttara, Dhaka",
-    },
-    professionalInfo: {
-      currentDesignation: "Product Manager",
-      currentOrganization: "Pathao",
-      from: "2021-12-31T18:00:00.000Z",
-      to: "Present",
-    },
-    prevProfessionalInfo: [],
-    numberOfParticipantInfo: { adult: 1, child: 0, total: 1 },
-    paymentInfo: {
-      totalAmount: 200,
-      mobileBankingName: "Nagad",
-      status: 0,
-      transactionId: "NGD987654321",
-    },
-    profilePictureInfo: {
-      image:
-        "https://images.pexels.com/photos/4069063/pexels-photo-4069063.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:30:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:30:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b574" },
-    personalInfo: {
-      name: "Mohammad Ali",
-      roll: 1601025,
-      registrationNo: 16025,
-      session: "2016-2017",
-      passingYear: "2020",
-    },
-    contactInfo: {
-      mobile: "01912345678",
-      email: "mohammad.ali@gmail.com",
-      currentAddress: "Gulshan, Dhaka",
-    },
-    professionalInfo: {
-      currentDesignation: "Senior Software Engineer",
-      currentOrganization: "Cefalo",
-      from: "2022-01-01T18:00:00.000Z",
-      to: "Present",
-    },
-    prevProfessionalInfo: [],
-    numberOfParticipantInfo: { adult: 2, child: 2, total: 4 },
-    paymentInfo: {
-      totalAmount: 700,
-      mobileBankingName: "Bkash",
-      status: 2,
-      transactionId: "BKS987612345",
-    },
-    profilePictureInfo: {
-      image: "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:31:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:31:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b575" },
-    personalInfo: {
-      name: "Nusrat Jahan",
-      roll: 1901034,
-      registrationNo: 19034,
-      session: "2019-2020",
-      passingYear: "2023",
-    },
-    contactInfo: {
-      mobile: "01756789012",
-      email: "nusrat.jahan@yahoo.com",
-      currentAddress: "Mohammadpur, Dhaka",
-    },
-    professionalInfo: {
-      currentDesignation: "Frontend Developer",
-      currentOrganization: "Selise",
-      from: "2023-06-01T18:00:00.000Z",
-      to: "Present",
-    },
-    prevProfessionalInfo: [],
-    numberOfParticipantInfo: { adult: 1, child: 0, total: 1 },
-    paymentInfo: {
-      totalAmount: 200,
-      mobileBankingName: "Rocket",
-      status: 1,
-      transactionId: "RKT123789456",
-    },
-    profilePictureInfo: {
-      image:
-        "https://images.pexels.com/photos/4069063/pexels-photo-4069063.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:32:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:32:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b576" },
-    personalInfo: {
-      name: "Ashikur Rahman",
-      roll: 1501012,
-      registrationNo: 15012,
-      session: "2015-2016",
-      passingYear: "2019",
-    },
-    contactInfo: {
-      mobile: "01634567890",
-      email: "ashik.rahman@gmail.com",
-      currentAddress: "Bashundhara, Dhaka",
-    },
-    professionalInfo: {
-      currentDesignation: "Tech Lead",
-      currentOrganization: "Datasoft",
-      from: "2022-01-01T18:00:00.000Z",
-      to: "Present",
-    },
-    prevProfessionalInfo: [],
-    numberOfParticipantInfo: { adult: 3, child: 1, total: 4 },
-    paymentInfo: {
-      totalAmount: 700,
-      mobileBankingName: "Bkash",
-      status: 0,
-      transactionId: "BKS567891234",
-    },
-    profilePictureInfo: {
-      image: "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:33:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:33:43.484Z" },
-    __v: 0,
-  },
-];
-
-const dummyStudents = [
-  {
-    _id: { $oid: "678f3ed7bde558432094b577" },
-    personalInfo: {
-      name: "Sakib Hassan",
-      roll: 2201034,
-      registrationNo: 22034,
-      session: "2022-2023",
-    },
-    contactInfo: {
-      mobile: "01672345678",
-      email: "sakib.hassan@gmail.com",
-      currentAddress: "Trishal, Mymensingh",
-    },
-    paymentInfo: {
-      totalAmount: 150,
-      mobileBankingName: "Rocket",
-      status: 1,
-      transactionId: "RKT456789123",
-    },
-    profilePictureInfo: {
-      image: "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:34:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:34:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b578" },
-    personalInfo: {
-      name: "Tasnim Rahman",
-      roll: 2201056,
-      registrationNo: 22056,
-      session: "2022-2023",
-    },
-    contactInfo: {
-      mobile: "01723456789",
-      email: "tasnim.r@gmail.com",
-      currentAddress: "Trishal, Mymensingh",
-    },
-    paymentInfo: {
-      totalAmount: 150,
-      mobileBankingName: "Bkash",
-      status: 2,
-      transactionId: "BKS567891234",
-    },
-    profilePictureInfo: {
-      image:
-        "https://images.pexels.com/photos/4069063/pexels-photo-4069063.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:35:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:35:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b579" },
-    personalInfo: {
-      name: "Rahat Khan",
-      roll: 2101023,
-      registrationNo: 21023,
-      session: "2021-2022",
-    },
-    contactInfo: {
-      mobile: "01834567890",
-      email: "rahat.khan@gmail.com",
-      currentAddress: "Fulbaria, Mymensingh",
-    },
-    paymentInfo: {
-      totalAmount: 150,
-      mobileBankingName: "Nagad",
-      status: 0,
-      transactionId: "NGD345678912",
-    },
-    profilePictureInfo: {
-      image: "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:36:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:36:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b580" },
-    personalInfo: {
-      name: "Sabina Yasmin",
-      roll: 2201078,
-      registrationNo: 22078,
-      session: "2022-2023",
-    },
-    contactInfo: {
-      mobile: "01945678901",
-      email: "sabina.y@gmail.com",
-      currentAddress: "Bhaluka, Mymensingh",
-    },
-    paymentInfo: {
-      totalAmount: 150,
-      mobileBankingName: "Bkash",
-      status: 1,
-      transactionId: "BKS789123456",
-    },
-    profilePictureInfo: {
-      image:
-        "https://images.pexels.com/photos/4069063/pexels-photo-4069063.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:37:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:37:43.484Z" },
-    __v: 0,
-  },
-  {
-    _id: { $oid: "678f3ed7bde558432094b581" },
-    personalInfo: {
-      name: "Minhaz Uddin",
-      roll: 2201089,
-      registrationNo: 22089,
-      session: "2022-2023",
-    },
-    contactInfo: {
-      mobile: "01856789012",
-      email: "minhaz.u@gmail.com",
-      currentAddress: "Gafargaon, Mymensingh",
-    },
-    paymentInfo: {
-      totalAmount: 150,
-      mobileBankingName: "Nagad",
-      status: 0,
-      transactionId: "NGD891234567",
-    },
-    profilePictureInfo: {
-      image: "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg",
-    },
-    createdAt: { $date: "2025-01-21T06:38:43.473Z" },
-    updatedAt: { $date: "2025-01-21T06:38:43.484Z" },
-    __v: 0,
-  },
-];
-
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("en-US", {
@@ -381,15 +58,131 @@ const formatDate = (dateString) => {
 };
 
 const RegistrationDashboard = () => {
+  const [stats, setStats] = useState({
+    approvedCount: 0,
+    pendingCount: 0,
+    rejectedCount: 0,
+    totalMoney: 0,
+    pendingMoney: 0,
+    alumniCount: 0,
+    studentCount: 0,
+    childrenCount: 0,
+  });
+
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch dashboard data
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [alumniResponse, studentResponse] = await Promise.all([
+        axios.get(`${API_URL}/api/alumni`),
+        axios.get(`${API_URL}/api/student`),
+      ]);
+
+      const allRegistrations = [
+        ...alumniResponse.data,
+        ...studentResponse.data,
+      ];
+
+      // Calculate stats
+      const approvedAlumni = alumniResponse.data.filter(
+        (a) => a.paymentInfo.status === 1
+      );
+      const pendingAlumni = alumniResponse.data.filter(
+        (a) => a.paymentInfo.status === 0
+      );
+      const approvedStudents = studentResponse.data.filter(
+        (s) => s.paymentInfo.status === 1
+      );
+      const pendingStudents = studentResponse.data.filter(
+        (s) => s.paymentInfo.status === 0
+      );
+
+      const approvedChildren = approvedAlumni.reduce(
+        (acc, a) => acc + (a.numberOfParticipantInfo?.child || 0),
+        0
+      );
+      const pendingChildren = pendingAlumni.reduce(
+        (acc, a) => acc + (a.numberOfParticipantInfo?.child || 0),
+        0
+      );
+
+      const totalApproved =
+        approvedAlumni.length + approvedStudents.length + approvedChildren;
+      const totalPending =
+        pendingAlumni.length + pendingStudents.length + pendingChildren;
+      const successRate = Math.round(
+        (totalApproved / (totalApproved + totalPending)) * 100
+      );
+
+      setStats({
+        approvedAlumni: approvedAlumni.length,
+        pendingAlumni: pendingAlumni.length,
+        approvedStudents: approvedStudents.length,
+        pendingStudents: pendingStudents.length,
+        approvedChildren,
+        pendingChildren,
+        totalApproved,
+        totalPending,
+        totalMoney: approvedAlumni
+          .concat(approvedStudents)
+          .reduce((acc, reg) => acc + reg.paymentInfo.totalAmount, 0),
+        pendingMoney: pendingAlumni
+          .concat(pendingStudents)
+          .reduce((acc, reg) => acc + reg.paymentInfo.totalAmount, 0),
+        successRate,
+      });
+
+      setRegistrations(allRegistrations);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch dashboard data",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleStatusUpdate = async (id, type, status) => {
+    try {
+      const endpoint = `${API_URL}/api/${type}/paymentUpdate/${id}/${status}`;
+      await axios.put(endpoint);
+      await fetchData(); // Refetch data after update
+
+      toast({
+        title: "Success",
+        description: "Status updated successfully",
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update status",
+      });
+    }
+  };
+
   const handleDelete = async (id, type) => {
     try {
-      const endpoint =
-        type === "alumni"
-          ? `${API_URL}/api/alumni/delete/${id}`
-          : `${API_URL}/api/student/delete/${id}`;
-
+      const endpoint = `${API_URL}/api/${type}/delete/${id}`;
       await axios.delete(endpoint);
-      window.location.reload();
+      await fetchData(); // Refetch data after delete
+
+      toast({
+        title: "Success",
+        description: "Registration deleted successfully",
+      });
     } catch {
       toast({
         variant: "destructive",
@@ -414,123 +207,12 @@ const RegistrationDashboard = () => {
         )
       );
 
-      window.location.reload();
+      await fetchData(); // Refetch data after bulk delete
     } catch {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to delete all rejected registrations",
-      });
-    }
-  };
-
-  const [stats, setStats] = useState({
-    approvedCount: 0,
-    pendingCount: 0,
-    rejectedCount: 0,
-    totalMoney: 0,
-    pendingMoney: 0,
-    alumniCount: 0,
-    studentCount: 0,
-    childrenCount: 0,
-  });
-
-  const [registrations, setRegistrations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
-  // Fetch dashboard stats
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setTimeout(() => {
-          const allRegistrations = [...dummyAlumni, ...dummyStudents];
-
-          // Separate approved and pending
-          const approvedAlumni = dummyAlumni.filter(
-            (a) => a.paymentInfo.status === 1
-          );
-          const pendingAlumni = dummyAlumni.filter(
-            (a) => a.paymentInfo.status === 0
-          );
-          const approvedStudents = dummyStudents.filter(
-            (s) => s.paymentInfo.status === 1
-          );
-          const pendingStudents = dummyStudents.filter(
-            (s) => s.paymentInfo.status === 0
-          );
-
-          // Calculate children counts
-          const approvedChildren = approvedAlumni.reduce(
-            (acc, a) => acc + (a.numberOfParticipantInfo?.child || 0),
-            0
-          );
-          const pendingChildren = pendingAlumni.reduce(
-            (acc, a) => acc + (a.numberOfParticipantInfo?.child || 0),
-            0
-          );
-
-          // Calculate total approved participants (including children)
-          const totalApproved =
-            approvedAlumni.length + approvedStudents.length + approvedChildren;
-          const totalPending =
-            pendingAlumni.length + pendingStudents.length + pendingChildren;
-
-          // Calculate success rate
-          const successRate = Math.round(
-            (totalApproved / (totalApproved + totalPending)) * 100
-          );
-
-          setStats({
-            approvedAlumni: approvedAlumni.length,
-            pendingAlumni: pendingAlumni.length,
-            approvedStudents: approvedStudents.length,
-            pendingStudents: pendingStudents.length,
-            approvedChildren: approvedChildren,
-            pendingChildren: pendingChildren,
-            totalApproved,
-            totalPending,
-            totalMoney: approvedAlumni
-              .concat(approvedStudents)
-              .reduce((acc, reg) => acc + reg.paymentInfo.totalAmount, 0),
-            pendingMoney: pendingAlumni
-              .concat(pendingStudents)
-              .reduce((acc, reg) => acc + reg.paymentInfo.totalAmount, 0),
-            successRate,
-          });
-
-          setRegistrations(allRegistrations);
-          setLoading(false);
-        }, 1000);
-      } catch {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch dashboard data",
-        });
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [toast]);
-
-  const handleStatusUpdate = async (id, type, status) => {
-    try {
-      const endpoint =
-        type === "alumni"
-          ? `${API_URL}/api/alumni/paymentUpdate/${id}/${status}`
-          : `${API_URL}/api/student/paymentUpdate/${id}/${status}`;
-
-      await axios.put(endpoint);
-
-      // Refresh data
-      window.location.reload();
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update status",
       });
     }
   };
@@ -1114,6 +796,13 @@ const RegistrationTable = ({
           ))}
         </div>
       </div>
+      {registrations.length === 0 && (
+        <Card className="text-center py-8">
+          <CardContent>
+            <p className="text-muted-foreground">No announcements found</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-// src/components/Admin/Register.jsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -17,14 +16,60 @@ export default function AdminRegister() {
     confirmPassword: "",
   });
 
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*]/.test(password);
+
+    return {
+      isValid:
+        password.length >= minLength &&
+        hasUpperCase &&
+        hasLowerCase &&
+        hasNumbers &&
+        hasSpecialChar,
+      errors: {
+        length: password.length < minLength,
+        upperCase: !hasUpperCase,
+        lowerCase: !hasLowerCase,
+        numbers: !hasNumbers,
+        specialChar: !hasSpecialChar,
+      },
+    };
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    const passwordValidation = validatePassword(formData.password);
+
+    if (!passwordValidation.isValid) {
+      let errorMessage = "Password must contain:";
+      if (passwordValidation.errors.length)
+        errorMessage += "\n- At least 8 characters";
+      if (passwordValidation.errors.upperCase)
+        errorMessage += "\n- One uppercase letter";
+      if (passwordValidation.errors.lowerCase)
+        errorMessage += "\n- One lowercase letter";
+      if (passwordValidation.errors.numbers) errorMessage += "\n- One number";
+      if (passwordValidation.errors.specialChar)
+        errorMessage += "\n- One special character (!@#$%^&*)";
+
+      toast({
+        variant: "destructive",
+        title: "Invalid Password",
+        description: errorMessage,
+      });
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Passwords do not match",
+        description: "Passwords do not match"
       });
       return;
     }
@@ -108,10 +153,7 @@ export default function AdminRegister() {
           </Button>
         </form>
         <div className="text-center text-sm">
-          <Link 
-            to="/admin/login"
-            className="text-primary hover:underline"
-          >
+          <Link to="/admin/login" className="text-primary hover:underline">
             Already have an account? Login
           </Link>
         </div>
