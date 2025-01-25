@@ -399,7 +399,7 @@ export default function Registration() {
           totalAmount: STUDENT_FEE,
         },
         profilePictureInfo: {
-          image: undefined,
+          image: "",
         },
       });
     } else {
@@ -418,14 +418,10 @@ export default function Registration() {
     try {
       setIsSubmitting(true);
 
-      console.log("Submitting form data:", values);
-
       // Submit form based on user type
       const response = await (isCurrentStudent
         ? registrationApi.submitStudentForm(values)
         : registrationApi.submitAlumniForm(values));
-
-      console.log("Server response:", response);
 
       if (response.success) {
         toast({
@@ -449,7 +445,6 @@ export default function Registration() {
         });
       }
     } catch (error) {
-      console.error("Form submission error:", error);
       toast({
         variant: "destructive",
         title: "Submission Failed",

@@ -74,7 +74,6 @@ const RegistrationDashboard = () => {
   const { toast } = useToast();
 
   // Fetch dashboard data
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -111,13 +110,9 @@ const RegistrationDashboard = () => {
         0
       );
 
-      const totalApproved =
-        approvedAlumni.length + approvedStudents.length + approvedChildren;
-      const totalPending =
-        pendingAlumni.length + pendingStudents.length + pendingChildren;
-      const successRate = Math.round(
-        (totalApproved / (totalApproved + totalPending)) * 100
-      );
+      const totalApproved = approvedAlumni.length + approvedStudents.length + approvedChildren;
+      const totalPending = pendingAlumni.length + pendingStudents.length + pendingChildren;
+      const successRate = Math.round((totalApproved / (totalApproved + totalPending)) * 100 );
 
       setStats({
         approvedAlumni: approvedAlumni.length,
@@ -138,8 +133,7 @@ const RegistrationDashboard = () => {
       });
 
       setRegistrations(allRegistrations);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch {
       toast({
         variant: "destructive",
         title: "Error",
@@ -200,10 +194,7 @@ const RegistrationDashboard = () => {
 
       await Promise.all(
         rejectedRegistrations.map((reg) =>
-          handleDelete(
-            reg._id,
-            reg.professionalInfo ? "alumni" : "student"
-          )
+          handleDelete(reg._id, reg.professionalInfo ? "alumni" : "student")
         )
       );
 
@@ -378,7 +369,7 @@ const RegistrationTable = ({
 }) => {
   // Sort registrations by date descending
   const sortedRegistrations = [...registrations].sort(
-    (a, b) => new Date(b.createAt) - new Date(a.createAt)
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
   const renderActions = (reg) => {
@@ -398,9 +389,7 @@ const RegistrationTable = ({
             <Button
               size="sm"
               onClick={(e) =>
-                handleButtonClick(e, () =>
-                  onStatusUpdate(reg._id, type, 1)
-                )
+                handleButtonClick(e, () => onStatusUpdate(reg._id, type, 1))
               }
               className="bg-green-500 hover:bg-green-600 w-auto sm:w-auto"
             >
@@ -413,9 +402,7 @@ const RegistrationTable = ({
               size="sm"
               variant="destructive"
               onClick={(e) =>
-                handleButtonClick(e, () =>
-                  onStatusUpdate(reg._id, type, 2)
-                )
+                handleButtonClick(e, () => onStatusUpdate(reg._id, type, 2))
               }
               className="w-full sm:w-auto"
             >
@@ -446,9 +433,7 @@ const RegistrationTable = ({
             <Button
               size="sm"
               onClick={(e) =>
-                handleButtonClick(e, () =>
-                  onStatusUpdate(reg._id, type, 1)
-                )
+                handleButtonClick(e, () => onStatusUpdate(reg._id, type, 1))
               }
               className="bg-green-500 hover:bg-green-600 w-full sm:w-auto"
             >
@@ -554,7 +539,7 @@ const RegistrationTable = ({
                     </div>
 
                     <div className="text-sm text-muted-foreground">
-                      {formatDate(reg.createAt)}
+                      {formatDate(reg.createdAt)}
                     </div>
                     <div className="hidden lg:flex justify-end col-span-2 sm:col-span-1">
                       {renderActions(reg)}
@@ -575,16 +560,18 @@ const RegistrationTable = ({
                         <Card>
                           <CardHeader className="pb-2">
                             <div className="flex flex-col items-center text-center">
-                              <Avatar className="h-24 w-24 border-2 mb-4">
-                                <AvatarImage
-                                  src={reg.profilePictureInfo.image}
-                                />
-                                <AvatarFallback className="text-xl">
-                                  {reg.personalInfo.name
-                                    .substring(0, 2)
-                                    .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
+                              {reg.professionalInfo && (
+                                <Avatar className="h-24 w-24 border-2 mb-4">
+                                  <AvatarImage
+                                    src={reg.profilePictureInfo.image}
+                                  />
+                                  <AvatarFallback className="text-xl">
+                                    {reg.personalInfo.name
+                                      .substring(0, 2)
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
 
                               <div className="space-y-4">
                                 <CardTitle className="text-xl">
@@ -749,11 +736,11 @@ const RegistrationTable = ({
                                 {reg.paymentInfo.mobileBankingName}
                               </Badge>
                             </div>
-                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
+                            <div className="p-2 sm:p-3 bg-muted rounded-lg grid grid-cols-[auto,1fr] gap-4">
+                              <span className="text-sm text-muted-foreground whitespace-nowrap">
                                 Transaction ID
                               </span>
-                              <span className="text-sm font-mono">
+                              <span className="text-sm font-mono text-right break-all overflow-hidden">
                                 {reg.paymentInfo.transactionId}
                               </span>
                             </div>
