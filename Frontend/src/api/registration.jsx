@@ -7,9 +7,7 @@ export const registrationApi = {
       const data = new FormData();
 
       Object.keys(formData).forEach((key) => {
-        if (key === "profilePictureInfo" && formData[key].image) {
-          data.append("profilePictureInfo", formData[key].image);
-        } else {
+        if (key !== "profilePictureInfo") {
           data.append(key, JSON.stringify(formData[key]));
         }
       });
@@ -19,7 +17,7 @@ export const registrationApi = {
         data,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
         }
       );
