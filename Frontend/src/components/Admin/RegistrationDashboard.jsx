@@ -83,21 +83,21 @@ const RegistrationDashboard = () => {
       ]);
 
       const allRegistrations = [
-        ...alumniResponse.data,
-        ...studentResponse.data,
+        ...(alumniResponse.data.data || []),
+        ...(studentResponse.data.data || []),
       ];
 
       // Calculate stats
-      const approvedAlumni = alumniResponse.data.filter(
+      const approvedAlumni = alumniResponse.data.data.filter(
         (a) => a.paymentInfo.status === 1
       );
-      const pendingAlumni = alumniResponse.data.filter(
+      const pendingAlumni = alumniResponse.data.data.filter(
         (a) => a.paymentInfo.status === 0
       );
-      const approvedStudents = studentResponse.data.filter(
+      const approvedStudents = studentResponse.data.data.filter(
         (s) => s.paymentInfo.status === 1
       );
-      const pendingStudents = studentResponse.data.filter(
+      const pendingStudents = studentResponse.data.data.filter(
         (s) => s.paymentInfo.status === 0
       );
 
