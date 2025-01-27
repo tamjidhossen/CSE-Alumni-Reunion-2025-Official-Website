@@ -91,10 +91,10 @@ const addAlumni = async (req, res) => {
 };
 
 const getAlumni = async (req, res) => {
+    console.log("hi")
     try {
         // Fetch all alumni from the database
         const alumni = await Alumni.find();
-
         // Return the alumni data
         res.status(200).json({
             success: true,
