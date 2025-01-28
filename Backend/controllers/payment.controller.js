@@ -1,6 +1,6 @@
 const Student = require('../models/student.model.js');
 const Alumni = require('../models/alumni.model.js');
-
+const emailService = require('../Services/mail.service.js')
 const paymentCheck = async (req, res) => {
     const { roll, reg, transactionId } = req.params;
 
@@ -104,7 +104,8 @@ const paymentUpdate = async (req, res) => {
             { 'paymentInfo.status': status },
             { new: true }
         );
-
+        emailService.sendPaymentConfirmationMail(student.contactInfo.email, "Payment Update", student)
+        console.log("send")
         if (alumni) {
             return res.status(200).json({
                 success: true,

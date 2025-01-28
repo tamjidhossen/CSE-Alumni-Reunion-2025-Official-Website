@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Alumni = require('../models/alumni.model.js');
-
+const emailService = require('../Services/mail.service.js')
 const addAlumni = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
@@ -71,7 +71,7 @@ const addAlumni = async (req, res) => {
                 // Update the alumni record with the image path
                 savedAlumni.profilePictureInfo.image = filePath;
                 await savedAlumni.save();
-
+                emailService.sendRegistrationMail(data.contactInfo.email, "Successfully Registered!", data);
                 res.status(201).json({
                     success: true,
                     message: 'Alumni registered successfully',
@@ -91,7 +91,6 @@ const addAlumni = async (req, res) => {
 };
 
 const getAlumni = async (req, res) => {
-    console.log("hi")
     try {
         // Fetch all alumni from the database
         const alumni = await Alumni.find();
@@ -233,7 +232,8 @@ const paymentUpdate = async (req, res) => {
             : status === '0'
                 ? 'Not Paid'
                 : 'Rejected';
-
+        emailService.sendPaymentConfirmationMail(alumni.contactInfo.email, "Payment Update", alumni)
+        console.log("send")
         res.json({
             success: true,
             message: `Payment status updated to ${statusMessage}`,
