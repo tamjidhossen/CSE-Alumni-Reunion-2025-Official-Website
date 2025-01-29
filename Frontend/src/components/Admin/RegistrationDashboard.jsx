@@ -27,6 +27,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
   UserCheck,
   X,
   Phone,
@@ -45,6 +53,7 @@ import {
   Baby,
   Trash2,
   Users as UsersGroup,
+  Search,
 } from "lucide-react";
 
 const formatDate = (dateString) => {
@@ -61,6 +70,16 @@ const formatDate = (dateString) => {
 
 const RegistrationDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [filters, setFilters] = useState({
+    type: "all", // all, student, alumni
+    session: "all",
+  });
+
   const [stats, setStats] = useState({
     approvedCount: 0,
     pendingCount: 0,
@@ -71,10 +90,6 @@ const RegistrationDashboard = () => {
     studentCount: 0,
     childrenCount: 0,
   });
-
-  const [registrations, setRegistrations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   // Fetch dashboard data
   const fetchData = async () => {
@@ -166,6 +181,44 @@ const RegistrationDashboard = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const getUniqueSessions = (registrations) => {
+    const sessions = new Set(
+      registrations.map((reg) => reg.personalInfo.session)
+    );
+    return Array.from(sessions).sort().reverse();
+  };
+
+  const filterRegistrations = (registrations) => {
+    return registrations.filter((reg) => {
+      // Search by transaction ID
+      if (
+        searchQuery &&
+        !reg.paymentInfo.transactionId
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Filter by type
+      if (filters.type !== "all") {
+        const isAlumni = !!reg.professionalInfo;
+        if (filters.type === "student" && isAlumni) return false;
+        if (filters.type === "alumni" && !isAlumni) return false;
+      }
+
+      // Filter by session
+      if (
+        filters.session !== "all" &&
+        reg.personalInfo.session !== filters.session
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  };
 
   const handleStatusUpdate = async (id, type, status) => {
     try {
@@ -287,6 +340,54 @@ const RegistrationDashboard = () => {
           />
         </div>
 
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by transaction ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select
+              value={filters.type}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, type: value }))
+              }
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="student">Students Only</SelectItem>
+                <SelectItem value="alumni">Alumni Only</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={filters.session}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, session: value }))
+              }
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by session" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sessions</SelectItem>
+                {getUniqueSessions(registrations).map((session) => (
+                  <SelectItem key={session} value={session}>
+                    {session}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Registration Tabs */}
         <Tabs defaultValue="pending" className="mb-8">
           <TabsList className="w-full flex justify-between items-center">
@@ -299,8 +400,8 @@ const RegistrationDashboard = () => {
 
           <TabsContent value="pending">
             <RegistrationTable
-              registrations={registrations.filter(
-                (reg) => reg.paymentInfo.status === 0
+              registrations={filterRegistrations(
+                registrations.filter((reg) => reg.paymentInfo.status === 0)
               )}
               onStatusUpdate={handleStatusUpdate}
               onDelete={handleDelete}
@@ -310,8 +411,8 @@ const RegistrationDashboard = () => {
 
           <TabsContent value="approved">
             <RegistrationTable
-              registrations={registrations.filter(
-                (reg) => reg.paymentInfo.status === 1
+              registrations={filterRegistrations(
+                registrations.filter((reg) => reg.paymentInfo.status === 1)
               )}
               onStatusUpdate={handleStatusUpdate}
               onDelete={handleDelete}
@@ -349,8 +450,8 @@ const RegistrationDashboard = () => {
               </AlertDialog>
             </div>
             <RegistrationTable
-              registrations={registrations.filter(
-                (reg) => reg.paymentInfo.status === 2
+              registrations={filterRegistrations(
+                registrations.filter((reg) => reg.paymentInfo.status === 2)
               )}
               onStatusUpdate={handleStatusUpdate}
               onDelete={handleDelete}
