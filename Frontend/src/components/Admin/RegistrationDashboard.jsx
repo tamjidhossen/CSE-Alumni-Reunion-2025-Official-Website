@@ -6,6 +6,8 @@ import { API_URL } from "@/lib/authConfig";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +60,7 @@ const formatDate = (dateString) => {
 };
 
 const RegistrationDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     approvedCount: 0,
     pendingCount: 0,
@@ -110,9 +113,13 @@ const RegistrationDashboard = () => {
         0
       );
 
-      const totalApproved = approvedAlumni.length + approvedStudents.length + approvedChildren;
-      const totalPending = pendingAlumni.length + pendingStudents.length + pendingChildren;
-      const successRate = Math.round((totalApproved / (totalApproved + totalPending)) * 100 );
+      const totalApproved =
+        approvedAlumni.length + approvedStudents.length + approvedChildren;
+      const totalPending =
+        pendingAlumni.length + pendingStudents.length + pendingChildren;
+      const successRate = Math.round(
+        (totalApproved / (totalApproved + totalPending)) * 100
+      );
 
       setStats({
         approvedAlumni: approvedAlumni.length,
@@ -133,12 +140,24 @@ const RegistrationDashboard = () => {
       });
 
       setRegistrations(allRegistrations);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch dashboard data",
-      });
+    } catch (error) {
+      // Check for unauthorized status (session expired)
+      if (error.response?.status === 401) {
+        toast({
+          variant: "destructive",
+          title: "Session Expired",
+          description: "Please login again to continue",
+        });
+        // Clear auth token and redirect to login
+        localStorage.removeItem("adminToken");
+        navigate("/admin/login");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch dashboard data",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -217,128 +236,131 @@ const RegistrationDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-8 py-8">
-      <div className="flex flex-col justify-between items-center mb-8 lg:flex-row">
-        <h1 className="text-xl font-bold">Registration Management</h1>
-      </div>
+    <>
+      <div className="container mx-auto px-8 py-8">
+        <div className="flex flex-col justify-between items-center mb-8 lg:flex-row">
+          <h1 className="text-xl font-bold">Registration Management</h1>
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatsCard
-          title="Alumni Registered"
-          value={stats.approvedAlumni}
-          pending={stats.pendingAlumni}
-          icon={GraduationCap}
-          className="bg-purple-500/10"
-        />
-        <StatsCard
-          title="Students Registered"
-          value={stats.approvedStudents}
-          pending={stats.pendingStudents}
-          icon={School}
-          className="bg-indigo-500/10"
-        />
-        <StatsCard
-          title="Children Coming"
-          value={stats.approvedChildren}
-          pending={stats.pendingChildren}
-          icon={Baby}
-          className="bg-pink-500/10"
-        />
-        <StatsCard
-          title="Total Participants"
-          value={stats.totalApproved}
-          pending={stats.totalPending}
-          icon={UsersGroup}
-          className="bg-green-500/10"
-        />
-        <StatsCard
-          title="Money Collected"
-          value={`৳${stats.totalMoney}`}
-          pending={`৳${stats.pendingMoney}`}
-          icon={Wallet}
-          className="col-span-2 bg-blue-500/10"
-        />
-        <StatsCard
-          title="Success Rate"
-          value={`${stats.successRate}%`}
-          icon={UserCheck}
-          className="col-span-2 bg-emerald-500/10"
-        />
-      </div>
-
-      {/* Registration Tabs */}
-      <Tabs defaultValue="pending" className="mb-8">
-        <TabsList className="w-full flex justify-between items-center">
-          <div className="flex">
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="approved">Approved</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected</TabsTrigger>
-          </div>
-        </TabsList>
-
-        <TabsContent value="pending">
-          <RegistrationTable
-            registrations={registrations.filter(
-              (reg) => reg.paymentInfo.status === 0
-            )}
-            onStatusUpdate={handleStatusUpdate}
-            onDelete={handleDelete}
-            tabType="pending"
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatsCard
+            title="Alumni Registered"
+            value={stats.approvedAlumni}
+            pending={stats.pendingAlumni}
+            icon={GraduationCap}
+            className="bg-purple-500/10"
           />
-        </TabsContent>
-
-        <TabsContent value="approved">
-          <RegistrationTable
-            registrations={registrations.filter(
-              (reg) => reg.paymentInfo.status === 1
-            )}
-            onStatusUpdate={handleStatusUpdate}
-            onDelete={handleDelete}
-            tabType="approved"
+          <StatsCard
+            title="Students Registered"
+            value={stats.approvedStudents}
+            pending={stats.pendingStudents}
+            icon={School}
+            className="bg-indigo-500/10"
           />
-        </TabsContent>
+          <StatsCard
+            title="Children Coming"
+            value={stats.approvedChildren}
+            pending={stats.pendingChildren}
+            icon={Baby}
+            className="bg-pink-500/10"
+          />
+          <StatsCard
+            title="Total Participants"
+            value={stats.totalApproved}
+            pending={stats.totalPending}
+            icon={UsersGroup}
+            className="bg-green-500/10"
+          />
+          <StatsCard
+            title="Money Collected"
+            value={`৳${stats.totalMoney}`}
+            pending={`৳${stats.pendingMoney}`}
+            icon={Wallet}
+            className="col-span-2 bg-blue-500/10"
+          />
+          <StatsCard
+            title="Success Rate"
+            value={`${stats.successRate}%`}
+            icon={UserCheck}
+            className="col-span-2 bg-emerald-500/10"
+          />
+        </div>
 
-        <TabsContent value="rejected">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Rejected Registrations</h3>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete All
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Delete All Rejected Records?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    all rejected registrations.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteAllRejected}>
+        {/* Registration Tabs */}
+        <Tabs defaultValue="pending" className="mb-8">
+          <TabsList className="w-full flex justify-between items-center">
+            <div className="flex">
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="approved">Approved</TabsTrigger>
+              <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            </div>
+          </TabsList>
+
+          <TabsContent value="pending">
+            <RegistrationTable
+              registrations={registrations.filter(
+                (reg) => reg.paymentInfo.status === 0
+              )}
+              onStatusUpdate={handleStatusUpdate}
+              onDelete={handleDelete}
+              tabType="pending"
+            />
+          </TabsContent>
+
+          <TabsContent value="approved">
+            <RegistrationTable
+              registrations={registrations.filter(
+                (reg) => reg.paymentInfo.status === 1
+              )}
+              onStatusUpdate={handleStatusUpdate}
+              onDelete={handleDelete}
+              tabType="approved"
+            />
+          </TabsContent>
+
+          <TabsContent value="rejected">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Rejected Registrations</h3>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
                     Delete All
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-          <RegistrationTable
-            registrations={registrations.filter(
-              (reg) => reg.paymentInfo.status === 2
-            )}
-            onStatusUpdate={handleStatusUpdate}
-            onDelete={handleDelete}
-            tabType="rejected"
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Delete All Rejected Records?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete
+                      all rejected registrations.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAllRejected}>
+                      Delete All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            <RegistrationTable
+              registrations={registrations.filter(
+                (reg) => reg.paymentInfo.status === 2
+              )}
+              onStatusUpdate={handleStatusUpdate}
+              onDelete={handleDelete}
+              tabType="rejected"
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Toaster />
+    </>
   );
 };
 
@@ -563,7 +585,9 @@ const RegistrationTable = ({
                               {reg.professionalInfo && (
                                 <Avatar className="h-24 w-24 border-2 mb-4">
                                   <AvatarImage
-                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image.split('/').pop()}`}
+                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image
+                                      .split("/")
+                                      .pop()}`}
                                   />
                                   <AvatarFallback className="text-xl">
                                     {reg.personalInfo.name
