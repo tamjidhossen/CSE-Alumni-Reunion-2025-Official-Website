@@ -563,7 +563,7 @@ const RegistrationTable = ({
                               {reg.professionalInfo && (
                                 <Avatar className="h-24 w-24 border-2 mb-4">
                                   <AvatarImage
-                                    src={reg.profilePictureInfo.image}
+                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image.split('/').pop()}`}
                                   />
                                   <AvatarFallback className="text-xl">
                                     {reg.personalInfo.name
