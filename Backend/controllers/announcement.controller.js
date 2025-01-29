@@ -6,7 +6,6 @@ const createAnnouncement = async (req, res) => {
         if (!title || !description) {
             return res.status(400).json({ success: false, message: 'All fields (title, description, link) are required' });
         }
-        console.log(req.body)
         const count = await Announcement.countDocuments();
         const announcement = new Announcement({
             id: count + 1,
@@ -30,7 +29,6 @@ const createAnnouncement = async (req, res) => {
 const getAnnouncements = async (req, res) => {
     try {
         const announcements = await Announcement.find().sort({ date: -1 }); // Sort by date, newest first
-        console.log(announcements)
         res.status(200).json(announcements);
     } catch (error) {
         console.error(error);
@@ -87,7 +85,6 @@ const updateAnnouncement = async (req, res) => {
 const deleteAnnouncement = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(id)
         const deletedAnnouncement = await Announcement.findOneAndDelete({ _id: id });
 
         if (!deletedAnnouncement) {

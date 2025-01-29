@@ -1,13 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const Student = require('../models/student.model.js');
-
+const emailService = require('../Services/mail.service.js')
 // Add new student
 const addStudent = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                console.log(key)
                 // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
@@ -15,8 +14,6 @@ const addStudent = async (req, res) => {
                 // If parsing fails, you can keep the original value or handle the error accordingly
             }
         });
-
-        console.log(req.body)
         // Parse and validate data from the request body
         const data = req.body;
         // Validate transaction ID
@@ -49,6 +46,7 @@ const addStudent = async (req, res) => {
 
         // Save the student data to the database
         const savedStudent = await student.save();
+        emailService.sendStudentConfirmationMail(data.contactInfo.email, "Successfully Registered!", savedStudent);
         res.status(201).json({
             success: true,
             message: 'Student registered successfully',
@@ -169,7 +167,8 @@ const paymentUpdate = async (req, res) => {
             : status === '0'
                 ? 'Not Paid'
                 : 'Rejected';
-
+        if (status === '1') emailService.sendPaymentConfirmationMail(student.contactInfo.email, "Payment Update", student)
+        else emailService.sendPaymentRejectionMail(student.contactInfo.email, "Payment Rejected", student)
         res.json({
             success: true,
             message: `Payment status updated to ${statusMessage}`,

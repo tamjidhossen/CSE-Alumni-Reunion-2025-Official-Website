@@ -14,7 +14,7 @@ const alumniRoutes = require('./routes/alumni.routes.js')
 const paymentRoutes = require('./routes/payment.routes.js')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
-
+app.use('/uploads/images', express.static('uploads/images'));
 app.use('/api/registration', registrationRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/announcement', announcementRoutes);

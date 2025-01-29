@@ -6,7 +6,6 @@ const addAlumni = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                console.log(key)
                 // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
@@ -16,7 +15,6 @@ const addAlumni = async (req, res) => {
         });
 
         const data = req.body;
-        console.log(data);
         // Validate transaction ID
         const existingAlumni = await Alumni.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
         if (existingAlumni) {
@@ -60,7 +58,6 @@ const addAlumni = async (req, res) => {
         if (req.file) {
             const uploadDir = path.join(__dirname, '../uploads/images');
             const filePath = `${uploadDir}/${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
-            console.log(filePath)
             fs.writeFile(filePath, req.file.buffer, async (err) => {
                 if (err) {
                     // Rollback database entry if file saving fails
@@ -232,8 +229,8 @@ const paymentUpdate = async (req, res) => {
             : status === '0'
                 ? 'Not Paid'
                 : 'Rejected';
-        emailService.sendPaymentConfirmationMail(alumni.contactInfo.email, "Payment Update", alumni)
-        console.log("send")
+        if (status === '1') emailService.sendPaymentConfirmationMail(alumni.contactInfo.email, "Payment Update", alumni)
+        else emailService.sendPaymentRejectionMail(alumni.contactInfo.email, "Payment Rejected", alumni)
         res.json({
             success: true,
             message: `Payment status updated to ${statusMessage}`,
