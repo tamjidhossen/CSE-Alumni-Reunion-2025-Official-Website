@@ -111,7 +111,7 @@ const Announcements = () => {
                     <CardTitle className="text-2xl font-bold tracking-tight">
                       {announcement.title}
                     </CardTitle>
-                    <CardDescription className="text-base leading-relaxed">
+                    <CardDescription className="text-base leading-relaxed whitespace-pre-wrap p-1">
                       {announcement.description}
                     </CardDescription>
                   </div>
