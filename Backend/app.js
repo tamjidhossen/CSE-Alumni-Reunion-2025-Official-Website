@@ -21,5 +21,6 @@ app.use('/api/announcement', announcementRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/alumni', alumniRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/uploads/images', express.static('uploads/images'));
 
 module.exports = app;
