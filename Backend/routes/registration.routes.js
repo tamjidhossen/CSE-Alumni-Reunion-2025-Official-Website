@@ -5,6 +5,6 @@ const alumniController = require('../controllers/alumni.controller.js');
 const studentController = require('../controllers/student.controller.js');
 
 router.post('/alumni-registration', upload.single('profilePictureInfo'), alumniController.addAlumni);
-router.post('/student-registration', studentController.addStudent);
+router.post('/student-registration', upload.single('profilePictureInfo'), studentController.addStudent);
 
 module.exports = router;

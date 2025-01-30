@@ -42,16 +42,39 @@ const addStudent = async (req, res) => {
             personalInfo: data.personalInfo,
             contactInfo: data.contactInfo,
             paymentInfo: data.paymentInfo,
+            profilePictureInfo: {},
         });
 
         // Save the student data to the database
         const savedStudent = await student.save();
-        emailService.sendStudentConfirmationMail(data.contactInfo.email, "Successfully Registered!", savedStudent);
-        res.status(201).json({
-            success: true,
-            message: 'Student registered successfully',
-            data: savedStudent,
-        });
+        // Handle image saving after database insertion
+        if (req.file) {
+            const uploadDir = path.join(__dirname, '../../../uploads/images');
+
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filePath = `${uploadDir}/${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            fs.writeFile(filePath, req.file.buffer, async (err) => {
+                if (err) {
+                    // Rollback database entry if file saving fails
+                    await Student.findByIdAndDelete(savedStudent._id);
+                    return res.status(500).json({ success: false, message: 'Failed to save the image' });
+                }
+
+                // Update the alumni record with the image path
+                savedStudent.profilePictureInfo.image = filePath;
+                await savedStudent.save();
+                emailService.sendStudentConfirmationMail(data.contactInfo.email, "Successfully Registered!", savedStudent);
+                res.status(201).json({
+                    success: true,
+                    message: 'Student registered successfully',
+                    data: savedStudent,
+                });
+            });
+        } else {
+            return res.status(400).json({ success: false, message: 'Profile picture is required' });
+        }
     } catch (error) {
         res.status(500).json({
             success: false,
