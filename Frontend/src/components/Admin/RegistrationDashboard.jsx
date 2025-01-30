@@ -683,20 +683,18 @@ const RegistrationTable = ({
                         <Card>
                           <CardHeader className="pb-2">
                             <div className="flex flex-col items-center text-center">
-                              {reg.professionalInfo && (
-                                <Avatar className="h-24 w-24 border-2 mb-4">
-                                  <AvatarImage
-                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image
-                                      .split("/")
-                                      .pop()}`}
-                                  />
-                                  <AvatarFallback className="text-xl">
-                                    {reg.personalInfo.name
-                                      .substring(0, 2)
-                                      .toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
+                              <Avatar className="h-24 w-24 border-2 mb-4">
+                                <AvatarImage
+                                  src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image
+                                    .split("/")
+                                    .pop()}`}
+                                />
+                                <AvatarFallback className="text-xl">
+                                  {reg.personalInfo.name
+                                    .substring(0, 2)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
 
                               <div className="space-y-4">
                                 <CardTitle className="text-xl">

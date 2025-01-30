@@ -109,11 +109,9 @@ const formSchema = (isCurrentStudent) =>
       status: z.coerce.number().default(1),
       transactionId: z.string().min(1, "Transaction ID is required"),
     }),
-    profilePictureInfo: isCurrentStudent
-      ? z.object({}).optional()
-      : z.object({
-          image: z.instanceof(File, { message: "Profile picture is required" }),
-        }),
+    profilePictureInfo: z.object({
+      image: z.instanceof(File, { message: "Profile picture is required" }),
+    }),
   });
 
 const TODAY = new Date();
@@ -1291,104 +1289,102 @@ export default function Registration() {
           </div>
 
           {/* Profile Picture */}
-          {!isCurrentStudent && (
-            <div className="space-y-4 pt-10">
-              <h2 className="text-2xl font-semibold border-b pb-2"></h2>
-              <FormField
-                control={form.control}
-                name="profilePictureInfo.image"
-                render={({ field: { value, onChange, ...field } }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Profile Picture
-                      <span
-                        className="text-red-500 cursor-help"
-                        title="This is a mandatory field"
+          <div className="space-y-4 pt-10">
+            <h2 className="text-2xl font-semibold border-b pb-2"></h2>
+            <FormField
+              control={form.control}
+              name="profilePictureInfo.image"
+              render={({ field: { value, onChange, ...field } }) => (
+                <FormItem>
+                  <FormLabel>
+                    Profile Picture
+                    <span
+                      className="text-red-500 cursor-help"
+                      title="This is a mandatory field"
+                    >
+                      {" "}
+                      *
+                    </span>
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div
+                        className={cn(
+                          "border-2 border-dashed rounded-lg p-4",
+                          "w-auto h-auto sm:w-[200px] sm:h-[150px] md:w-[200px] md:h-[150px]",
+                          "flex flex-col items-center justify-center gap-2",
+                          "cursor-pointer hover:border-primary transition-colors",
+                          value && "border-primary"
+                        )}
+                        onClick={() =>
+                          document.getElementById("picture-upload").click()
+                        }
                       >
-                        {" "}
-                        *
-                      </span>
-                    </FormLabel>
-                    <FormControl>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <div
-                          className={cn(
-                            "border-2 border-dashed rounded-lg p-4",
-                            "w-auto h-auto sm:w-[200px] sm:h-[150px] md:w-[200px] md:h-[150px]",
-                            "flex flex-col items-center justify-center gap-2",
-                            "cursor-pointer hover:border-primary transition-colors",
-                            value && "border-primary"
-                          )}
-                          onClick={() =>
-                            document.getElementById("picture-upload").click()
-                          }
-                        >
-                          {value ? (
-                            <div className="relative w-full h-full">
-                              <img
-                                src={
-                                  typeof value === "string"
-                                    ? value
-                                    : URL.createObjectURL(value)
-                                }
-                                alt="Profile preview"
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute -top-2 -right-2 h-6 w-6"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onChange(null);
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-                              <p className="text-xs sm:text-sm text-muted-foreground text-center">
-                                Click to upload
-                              </p>
-                            </>
-                          )}
-                        </div>
-                        <input
-                          id="picture-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              if (validateFile(file)) {
-                                onChange(file);
-                              } else {
-                                e.target.value = ''; // Clear the input
+                        {value ? (
+                          <div className="relative w-full h-full">
+                            <img
+                              src={
+                                typeof value === "string"
+                                  ? value
+                                  : URL.createObjectURL(value)
                               }
-                            }
-                          }}
-                          {...field}
-                        />
+                              alt="Profile preview"
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onChange(null);
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+                            <p className="text-xs sm:text-sm text-muted-foreground text-center">
+                              Click to upload
+                            </p>
+                          </>
+                        )}
                       </div>
-                    </FormControl>
-                    <FormDescription className="text-xs sm:text-sm text-muted-foreground">
-                      Upload a recent formal passport size photo (max 2MB).
-                      Photo should be:
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Clear, front-facing with formal attire</li>
-                        <li>Latest photo preferable</li>
-                      </ul>
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
+                      <input
+                        id="picture-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (validateFile(file)) {
+                              onChange(file);
+                            } else {
+                              e.target.value = ""; // Clear the input
+                            }
+                          }
+                        }}
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription className="text-xs sm:text-sm text-muted-foreground">
+                    Upload a recent formal passport size photo (max 2MB). Photo
+                    should be:
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Clear, front-facing with formal attire</li>
+                      <li>Latest photo preferable</li>
+                    </ul>
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Update submit button for transaction id checking */}
           <Button
