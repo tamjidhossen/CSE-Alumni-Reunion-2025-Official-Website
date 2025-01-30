@@ -24,6 +24,8 @@ export default function AdminLogin() {
       );
       if (response.data.success) {
         setAuthToken(response.data.token);
+        // Store admin data in localStorage
+        localStorage.setItem("adminData", JSON.stringify(response.data.admin));
         toast({
           title: "Success",
           description: "Logged in successfully",

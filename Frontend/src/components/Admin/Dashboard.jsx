@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LayoutDashboard } from "lucide-react"; // Add this import
+import { LayoutDashboard, User } from "lucide-react"; // Add this import
 import RegistrationsDashboard from "./RegistrationDashboard";
 import AnnouncementsDashboard from "./AnnouncementDashboard";
 
@@ -16,9 +16,16 @@ export default function Dashboard() {
     () => localStorage.getItem("dashboardView") || "registrations"
   );
 
-  // Update localStorage when view changes
+  // Add state for admin name
+  const [adminName, setAdminName] = useState("");
+
   useEffect(() => {
     localStorage.setItem("dashboardView", activeView);
+    // Get admin data from localStorage
+    const admin = JSON.parse(localStorage.getItem("adminData"));
+    if (admin?.name) {
+      setAdminName(admin.name);
+    }
   }, [activeView]);
 
   return (
@@ -35,6 +42,10 @@ export default function Dashboard() {
                 <SelectItem value="announcements">Announcements</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>{adminName}</span>
+            </div>
 
             <div className="flex items-center gap-2">
               <h1 className="text-2xl sm:text-3xl font-bold">
