@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
+import { useReactToPrint } from "react-to-print";
+import PrintableTable from "./PrintableTable";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,6 +56,7 @@ import {
   Trash2,
   Users as UsersGroup,
   Search,
+  Printer,
 } from "lucide-react";
 
 const formatDate = (dateString) => {
@@ -406,6 +409,7 @@ const RegistrationDashboard = () => {
               onStatusUpdate={handleStatusUpdate}
               onDelete={handleDelete}
               tabType="pending"
+              filters={filters}
             />
           </TabsContent>
 
@@ -417,6 +421,7 @@ const RegistrationDashboard = () => {
               onStatusUpdate={handleStatusUpdate}
               onDelete={handleDelete}
               tabType="approved"
+              filters={filters}
             />
           </TabsContent>
 
@@ -456,6 +461,7 @@ const RegistrationDashboard = () => {
               onStatusUpdate={handleStatusUpdate}
               onDelete={handleDelete}
               tabType="rejected"
+              filters={filters}
             />
           </TabsContent>
         </Tabs>
@@ -489,7 +495,24 @@ const RegistrationTable = ({
   onStatusUpdate,
   onDelete,
   tabType,
+  filters,
 }) => {
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    documentTitle: `Reunion_${
+      tabType.charAt(0).toUpperCase() + tabType.slice(1)
+    }_Registrations_${new Date().toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`.replace(/[/:]/g, "-"),
+    removeAfterPrint: true, // Add this line
+  });
+
   // Sort registrations by date descending
   const sortedRegistrations = [...registrations].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -610,310 +633,332 @@ const RegistrationTable = ({
   };
 
   return (
-    <div className="w-full overflow-hidden rounded-lg border bg-background">
-      {/* Table Container */}
-      <div className="min-w-full">
-        {/* Table Header */}
-        <div className="hidden sticky top-0 z-10 md:grid grid-cols-6 gap-4 px-6 py-4 border-b bg-muted/50 backdrop-blur supports-[backdrop-filter]:bg-muted/50">
-          <div className="text-sm font-semibold">Name</div>
-          <div className="text-sm font-semibold">Type</div>
-          <div className="text-sm font-semibold">Transaction ID</div>
-          <div className="text-sm font-semibold">Amount</div>
-          <div className="text-sm font-semibold">Registered On</div>
-          <div className="text-sm font-semibold text-right">Actions</div>
-        </div>
+    <>
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" size="sm" onClick={() => handlePrint()}>
+          <Printer className="h-4 w-4 mr-2" />
+          Print List
+        </Button>
+      </div>
 
-        {/* Table Body */}
-        <div className="divide-y divide-border">
-          {sortedRegistrations.map((reg) => (
-            <Accordion type="single" collapsible key={reg._id}>
-              <AccordionItem value={reg._id} className="border-0">
-                {/* Accordion Header/Trigger */}
-                <AccordionTrigger className="hover:no-underline w-full transition-colors hover:bg-muted/50 [&>svg]:hidden">
-                  <div className="flex flex-col lg:grid lg:grid-cols-6 lg:gap-4 w-full px-6 py-4">
-                    <div className="font-medium truncate">
-                      {reg.personalInfo.name}
-                    </div>
+      {/* PrintableTable with ref */}
+      <div style={{ display: "none" }}>
+        <PrintableTable
+          ref={componentRef}
+          registrations={sortedRegistrations}
+          tabType={tabType}
+          filterType={filters.type}
+          filterSession={filters.session}
+        />
+      </div>
 
-                    <div className="items-center">
-                      {reg.professionalInfo ? (
-                        <Badge variant="secondary" className="font-normal">
-                          <GraduationCap className="h-4 w-4 mr-1" />
-                          <span className="hidden lg:inline">Alumni</span>
-                        </Badge>
-                      ) : (
-                        <Badge className="font-normal">
-                          <School className="h-4 w-4 mr-1" />
-                          <span className="hidden lg:inline">Student</span>
-                        </Badge>
-                      )}
-                    </div>
+      <div className="w-full overflow-hidden rounded-lg border bg-background">
+        {/* Table Container */}
+        <div className="min-w-full">
+          {/* Table Header */}
+          <div className="hidden sticky top-0 z-10 md:grid grid-cols-6 gap-4 px-6 py-4 border-b bg-muted/50 backdrop-blur supports-[backdrop-filter]:bg-muted/50">
+            <div className="text-sm font-semibold">Name</div>
+            <div className="text-sm font-semibold">Type</div>
+            <div className="text-sm font-semibold">Transaction ID</div>
+            <div className="text-sm font-semibold">Amount</div>
+            <div className="text-sm font-semibold">Registered On</div>
+            <div className="text-sm font-semibold text-right">Actions</div>
+          </div>
 
-                    <div className="lg:hidden py-2 text-sm font-extrabold">
-                      ৳{reg.paymentInfo.totalAmount}
-                    </div>
+          {/* Table Body */}
+          <div className="divide-y divide-border">
+            {sortedRegistrations.map((reg) => (
+              <Accordion type="single" collapsible key={reg._id}>
+                <AccordionItem value={reg._id} className="border-0">
+                  {/* Accordion Header/Trigger */}
+                  <AccordionTrigger className="hover:no-underline w-full transition-colors hover:bg-muted/50 [&>svg]:hidden">
+                    <div className="flex flex-col lg:grid lg:grid-cols-6 lg:gap-4 w-full px-6 py-4">
+                      <div className="font-medium truncate">
+                        {reg.personalInfo.name}
+                      </div>
 
-                    <div className="text-sm text-muted-foreground">
-                      {reg.paymentInfo.transactionId}
-                    </div>
+                      <div className="items-center">
+                        {reg.professionalInfo ? (
+                          <Badge variant="secondary" className="font-normal">
+                            <GraduationCap className="h-4 w-4 mr-1" />
+                            <span className="hidden lg:inline">Alumni</span>
+                          </Badge>
+                        ) : (
+                          <Badge className="font-normal">
+                            <School className="h-4 w-4 mr-1" />
+                            <span className="hidden lg:inline">Student</span>
+                          </Badge>
+                        )}
+                      </div>
 
-                    <div className="hidden lg:block text-sm font-medium">
-                      ৳{reg.paymentInfo.totalAmount}
-                    </div>
+                      <div className="lg:hidden py-2 text-sm font-extrabold">
+                        ৳{reg.paymentInfo.totalAmount}
+                      </div>
 
-                    <div className="text-sm text-muted-foreground">
-                      {formatDate(reg.createdAt)}
+                      <div className="text-sm text-muted-foreground">
+                        {reg.paymentInfo.transactionId}
+                      </div>
+
+                      <div className="hidden lg:block text-sm font-medium">
+                        ৳{reg.paymentInfo.totalAmount}
+                      </div>
+
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(reg.createdAt)}
+                      </div>
+                      <div className="hidden lg:flex justify-end col-span-2 sm:col-span-1">
+                        {renderActions(reg)}
+                      </div>
                     </div>
-                    <div className="hidden lg:flex justify-end col-span-2 sm:col-span-1">
+                    <div className="lg:hidden px-6 py-4">
                       {renderActions(reg)}
                     </div>
-                  </div>
-                  <div className="lg:hidden px-6 py-4">
-                    {renderActions(reg)}
-                  </div>
-                </AccordionTrigger>
+                  </AccordionTrigger>
 
-                {/* Accordion Content */}
-                <AccordionContent>
-                  <div className="px-6 py-4 bg-muted/30">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                      {/* Profile & Contact Section */}
-                      <div className="lg:col-span-4 space-y-4">
-                        {/* Profile Card */}
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <div className="flex flex-col items-center text-center">
-                              <Avatar className="h-24 w-24 border-2 mb-4">
-                                <AvatarImage
-                                  src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image
-                                    .split("/")
-                                    .pop()}`}
-                                />
-                                <AvatarFallback className="text-xl">
-                                  {reg.personalInfo.name
-                                    .substring(0, 2)
-                                    .toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
+                  {/* Accordion Content */}
+                  <AccordionContent>
+                    <div className="px-6 py-4 bg-muted/30">
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        {/* Profile & Contact Section */}
+                        <div className="lg:col-span-4 space-y-4">
+                          {/* Profile Card */}
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <div className="flex flex-col items-center text-center">
+                                <Avatar className="h-24 w-24 border-2 mb-4">
+                                  <AvatarImage
+                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image
+                                      .split("/")
+                                      .pop()}`}
+                                  />
+                                  <AvatarFallback className="text-xl">
+                                    {reg.personalInfo.name
+                                      .substring(0, 2)
+                                      .toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
 
-                              <div className="space-y-4">
-                                <CardTitle className="text-xl">
-                                  {reg.personalInfo.name}
+                                <div className="space-y-4">
+                                  <CardTitle className="text-xl">
+                                    {reg.personalInfo.name}
+                                  </CardTitle>
+
+                                  <div className="grid gap-3">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                      <Calendar className="h-4 w-4" />
+                                      <span>{reg.personalInfo.session}</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                      <CreditCard className="h-4 w-4" />
+                                      <span>Roll: {reg.personalInfo.roll}</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                                      <Users2 className="h-4 w-4" />
+                                      <span>
+                                        Reg: {reg.personalInfo.registrationNo}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardHeader>
+                          </Card>
+
+                          {/* Contact Info Card */}
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                                Contact Information
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">
+                                  {reg.contactInfo.mobile}
+                                </span>
+                              </div>
+                              <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm break-all">
+                                  {reg.contactInfo.email}
+                                </span>
+                              </div>
+                              <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">
+                                  {reg.contactInfo.currentAddress}
+                                </span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Professional Info Section */}
+                        <div className="lg:col-span-5">
+                          {reg.professionalInfo && (
+                            <Card className="h-full">
+                              <CardHeader>
+                                <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                                  Professional Information
                                 </CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-6">
+                                <div className="p-4 bg-muted rounded-lg space-y-3">
+                                  <h4 className="font-medium text-sm">
+                                    Current Position
+                                  </h4>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center text-sm gap-2">
+                                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                      {reg.professionalInfo.currentDesignation}
+                                    </div>
+                                    <div className="flex items-center text-sm gap-2">
+                                      <Building className="h-4 w-4 text-muted-foreground" />
+                                      {reg.professionalInfo.currentOrganization}
+                                    </div>
+                                  </div>
+                                </div>
 
-                                <div className="grid gap-3">
-                                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>{reg.personalInfo.session}</span>
+                                {reg.prevProfessionalInfo?.length > 0 && (
+                                  <div className="p-4 bg-muted rounded-lg space-y-3">
+                                    <h4 className="font-medium text-sm">
+                                      Previous Experience
+                                    </h4>
+                                    {reg.prevProfessionalInfo.map(
+                                      (prev, idx) => (
+                                        <div key={idx} className="space-y-2">
+                                          <div className="flex items-center text-sm gap-2">
+                                            <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                            {prev.designation}
+                                          </div>
+                                          <div className="flex items-center text-sm gap-2">
+                                            <Building className="h-4 w-4 text-muted-foreground" />
+                                            {prev.organization}
+                                          </div>
+                                        </div>
+                                      )
+                                    )}
                                   </div>
-                                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                                    <CreditCard className="h-4 w-4" />
-                                    <span>Roll: {reg.personalInfo.roll}</span>
+                                )}
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+
+                        {/* Participants & Payment Section */}
+                        <div className="lg:col-span-3 space-y-4">
+                          {/* Participants Card */}
+                          {reg.numberOfParticipantInfo && (
+                            <Card>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium tracking-wide uppercase">
+                                  Participants
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                      Adults
+                                    </span>
+                                    <span className="font-semibold">
+                                      {reg.numberOfParticipantInfo.adult}
+                                    </span>
                                   </div>
-                                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                                    <Users2 className="h-4 w-4" />
-                                    <span>
-                                      Reg: {reg.personalInfo.registrationNo}
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                      Children
+                                    </span>
+                                    <span className="font-semibold">
+                                      {reg.numberOfParticipantInfo.child}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between border-t pt-2 mt-2">
+                                    <span className="text-sm font-medium">
+                                      Total
+                                    </span>
+                                    <span className="font-semibold">
+                                      {reg.numberOfParticipantInfo.total}
                                     </span>
                                   </div>
                                 </div>
-                              </div>
-                            </div>
-                          </CardHeader>
-                        </Card>
+                              </CardContent>
+                            </Card>
+                          )}
 
-                        {/* Contact Info Card */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-sm font-medium tracking-wide uppercase">
-                              Contact Information
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
-                              <Phone className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">
-                                {reg.contactInfo.mobile}
-                              </span>
-                            </div>
-                            <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
-                              <Mail className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm break-all">
-                                {reg.contactInfo.email}
-                              </span>
-                            </div>
-                            <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">
-                                {reg.contactInfo.currentAddress}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-
-                      {/* Professional Info Section */}
-                      <div className="lg:col-span-5">
-                        {reg.professionalInfo && (
-                          <Card className="h-full">
+                          {/* Payment Details Card */}
+                          <Card>
                             <CardHeader>
                               <CardTitle className="text-sm font-medium tracking-wide uppercase">
-                                Professional Information
+                                Payment Details
                               </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-6">
-                              <div className="p-4 bg-muted rounded-lg space-y-3">
-                                <h4 className="font-medium text-sm">
-                                  Current Position
-                                </h4>
-                                <div className="space-y-2">
-                                  <div className="flex items-center text-sm gap-2">
-                                    <Briefcase className="h-4 w-4 text-muted-foreground" />
-                                    {reg.professionalInfo.currentDesignation}
-                                  </div>
-                                  <div className="flex items-center text-sm gap-2">
-                                    <Building className="h-4 w-4 text-muted-foreground" />
-                                    {reg.professionalInfo.currentOrganization}
-                                  </div>
-                                </div>
+                            <CardContent className="space-y-4">
+                              <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">
+                                  Method
+                                </span>
+                                <Badge variant="outline">
+                                  {reg.paymentInfo.mobileBankingName}
+                                </Badge>
                               </div>
-
-                              {reg.prevProfessionalInfo?.length > 0 && (
-                                <div className="p-4 bg-muted rounded-lg space-y-3">
-                                  <h4 className="font-medium text-sm">
-                                    Previous Experience
-                                  </h4>
-                                  {reg.prevProfessionalInfo.map((prev, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                      <div className="flex items-center text-sm gap-2">
-                                        <Briefcase className="h-4 w-4 text-muted-foreground" />
-                                        {prev.designation}
-                                      </div>
-                                      <div className="flex items-center text-sm gap-2">
-                                        <Building className="h-4 w-4 text-muted-foreground" />
-                                        {prev.organization}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
-                        )}
-                      </div>
-
-                      {/* Participants & Payment Section */}
-                      <div className="lg:col-span-3 space-y-4">
-                        {/* Participants Card */}
-                        {reg.numberOfParticipantInfo && (
-                          <Card>
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-sm font-medium tracking-wide uppercase">
-                                Participants
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-muted-foreground">
-                                    Adults
-                                  </span>
-                                  <span className="font-semibold">
-                                    {reg.numberOfParticipantInfo.adult}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-muted-foreground">
-                                    Children
-                                  </span>
-                                  <span className="font-semibold">
-                                    {reg.numberOfParticipantInfo.child}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between border-t pt-2 mt-2">
-                                  <span className="text-sm font-medium">
-                                    Total
-                                  </span>
-                                  <span className="font-semibold">
-                                    {reg.numberOfParticipantInfo.total}
-                                  </span>
-                                </div>
+                              <div className="p-2 sm:p-3 bg-muted rounded-lg grid grid-cols-[auto,1fr] gap-4">
+                                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                  Transaction ID
+                                </span>
+                                <span className="text-sm font-mono text-right break-all overflow-hidden">
+                                  {reg.paymentInfo.transactionId}
+                                </span>
                               </div>
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        {/* Payment Details Card */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-sm font-medium tracking-wide uppercase">
-                              Payment Details
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Method
-                              </span>
-                              <Badge variant="outline">
-                                {reg.paymentInfo.mobileBankingName}
-                              </Badge>
-                            </div>
-                            <div className="p-2 sm:p-3 bg-muted rounded-lg grid grid-cols-[auto,1fr] gap-4">
-                              <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                Transaction ID
-                              </span>
-                              <span className="text-sm font-mono text-right break-all overflow-hidden">
-                                {reg.paymentInfo.transactionId}
-                              </span>
-                            </div>
-                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Amount
-                              </span>
-                              <span className="text-sm font-semibold">
-                                ৳{reg.paymentInfo.totalAmount}
-                              </span>
-                            </div>
-                            <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">
-                                Status
-                              </span>
-                              <Badge
-                                variant={
-                                  reg.paymentInfo.status === 0
-                                    ? "default"
+                              <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">
+                                  Amount
+                                </span>
+                                <span className="text-sm font-semibold">
+                                  ৳{reg.paymentInfo.totalAmount}
+                                </span>
+                              </div>
+                              <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">
+                                  Status
+                                </span>
+                                <Badge
+                                  variant={
+                                    reg.paymentInfo.status === 0
+                                      ? "default"
+                                      : reg.paymentInfo.status === 1
+                                      ? "success"
+                                      : "destructive"
+                                  }
+                                >
+                                  {reg.paymentInfo.status === 0
+                                    ? "Pending"
                                     : reg.paymentInfo.status === 1
-                                    ? "success"
-                                    : "destructive"
-                                }
-                              >
-                                {reg.paymentInfo.status === 0
-                                  ? "Pending"
-                                  : reg.paymentInfo.status === 1
-                                  ? "Approved"
-                                  : "Rejected"}
-                              </Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
+                                    ? "Approved"
+                                    : "Rejected"}
+                                </Badge>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          ))}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ))}
+          </div>
         </div>
+        {registrations.length === 0 && (
+          <Card className="text-center py-8">
+            <CardContent>
+              <p className="text-muted-foreground">No announcements found</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-      {registrations.length === 0 && (
-        <Card className="text-center py-8">
-          <CardContent>
-            <p className="text-muted-foreground">No announcements found</p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    </>
   );
 };
 

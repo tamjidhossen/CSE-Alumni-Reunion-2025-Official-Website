@@ -67,3 +67,46 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+  }
+
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* Additional print styles */
+  .print-only table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .print-only th,
+  .print-only td {
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
+
+  .print-only th {
+    background-color: #f4f4f4 !important;
+  }
+
+  .print-only tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+}
