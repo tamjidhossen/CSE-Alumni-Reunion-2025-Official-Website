@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LayoutDashboard, User, LogOut } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RegistrationsDashboard from "./RegistrationDashboard";
 import AnnouncementsDashboard from "./AnnouncementDashboard";
