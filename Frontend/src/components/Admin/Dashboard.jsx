@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -6,11 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LayoutDashboard, User } from "lucide-react"; // Add this import
+import { LayoutDashboard, User, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import RegistrationsDashboard from "./RegistrationDashboard";
 import AnnouncementsDashboard from "./AnnouncementDashboard";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   // Initialize state with value from localStorage or default to "registrations"
   const [activeView, setActiveView] = useState(
     () => localStorage.getItem("dashboardView") || "registrations"
@@ -27,6 +30,13 @@ export default function Dashboard() {
       setAdminName(admin.name);
     }
   }, [activeView]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminData");
+    localStorage.removeItem("dashboardView");
+    navigate("/admin/login");
+  };
 
   return (
     <div className="min-h-screen">
@@ -51,7 +61,14 @@ export default function Dashboard() {
               <h1 className="text-2xl sm:text-3xl font-bold">
                 Admin Dashboard
               </h1>
-              <LayoutDashboard className="h-6 w-6" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
