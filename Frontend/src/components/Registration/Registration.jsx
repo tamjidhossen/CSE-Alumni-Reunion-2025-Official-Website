@@ -65,7 +65,7 @@ const formSchema = (isCurrentStudent) =>
       session: z.string().min(1, "Session is required"),
       passingYear: isCurrentStudent
         ? z.string().optional()
-        : z.string().min(1, "Passing Year is required"),
+        : z.string().min(1, "Year of Certificate Awarded is required"),
     }),
     contactInfo: z.object({
       mobile: z.string().min(1, "Mobile number is required"),
@@ -711,7 +711,7 @@ export default function Registration() {
                   />
                 </div>
 
-                {/* Input Passing Year */}
+                {/* Input Year of Certificate Awarded */}
                 {!isCurrentStudent && (
                   <div className="col-span-6">
                     <FormField
@@ -720,7 +720,7 @@ export default function Registration() {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>
-                            Passing Year
+                            Year of Certificate Awarded
                             <RequiredField value={field.value} />
                           </FormLabel>
                           <Popover>
@@ -739,7 +739,7 @@ export default function Registration() {
                                         (passingYear) =>
                                           passingYear.value === field.value
                                       )?.label
-                                    : "Select passing year"}
+                                    : "Select year"}
                                   <ChevronsUpDown className=" h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                               </FormControl>
@@ -855,7 +855,7 @@ export default function Registration() {
                 name="contactInfo.currentAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Current Address</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder=""
@@ -1210,7 +1210,7 @@ export default function Registration() {
               Payment Information
             </h2>
             <div className="space-y-6">
-              {/* Total Amount  */}
+              {/* Total Amount */}
               <FormField
                 control={form.control}
                 name="paymentInfo.totalAmount"
@@ -1225,66 +1225,76 @@ export default function Registration() {
                         value={field.value || 0}
                       />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* Payment Method  */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="paymentInfo.mobileBankingName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Payment Method
-                          <RequiredField value={field.value} />
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+
+              {isCurrentStudent ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 p-4">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    Please submit the registration fee (hand cash) to your
+                    respective batch&apos;s Class Representative after competing the registration.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-12 gap-4">
+                  {/* Payment Method */}
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="paymentInfo.mobileBankingName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Payment Method
+                            <RequiredField value={field.value} />
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="bankTransfer">
+                                Bank Transfer
+                              </SelectItem>
+                              <SelectItem value="cashDeposit">
+                                Cash Deposit
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Transaction Id */}
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="paymentInfo.transactionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Transaction Id
+                            <RequiredField value={field.value} />
+                          </FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="" />
-                            </SelectTrigger>
+                            <Input placeholder="" type="text" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Bkash">Bkash</SelectItem>
-                            <SelectItem value="Rocket">Rocket</SelectItem>
-                            <SelectItem value="Nagad">Nagad</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-
-                {/* Transation Id */}
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="paymentInfo.transactionId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Transaction Id
-                          <RequiredField value={field.value} />
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="" type="text" {...field} />
-                        </FormControl>
-
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -1297,7 +1307,9 @@ export default function Registration() {
               render={({ field: { value, onChange, ...field } }) => (
                 <FormItem>
                   <FormLabel>
-                    Profile Picture
+                    {isCurrentStudent
+                      ? "Student's Profile Picture"
+                      : "Alumnus Profile Picture"}
                     <span
                       className="text-red-500 cursor-help"
                       title="This is a mandatory field"
