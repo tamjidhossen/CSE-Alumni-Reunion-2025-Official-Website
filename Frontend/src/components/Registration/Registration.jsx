@@ -9,7 +9,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, School } from "lucide-react";
+import { GraduationCap, School, CheckCircle2, ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import {
@@ -103,16 +115,143 @@ const formSchema = (isCurrentStudent) =>
           child: z.coerce.number().min(0).optional(),
           total: z.coerce.number().optional(),
         }),
-    paymentInfo: z.object({
-      totalAmount: z.coerce.number(),
-      mobileBankingName: z.string().min(1, "Payment method is required"),
-      status: z.coerce.number().default(1),
-      transactionId: z.string().min(1, "Transaction ID is required"),
-    }),
+    paymentInfo: isCurrentStudent
+      ? z.object({
+          totalAmount: z.coerce.number(),
+          mobileBankingName: z.string().optional(),
+          status: z.coerce.number().default(1),
+          transactionId: z.string().optional(),
+        })
+      : z.object({
+          totalAmount: z.coerce.number(),
+          mobileBankingName: z.string().min(1, "Payment method is required"),
+          status: z.coerce.number().default(1),
+          transactionId: z.string().min(1, "Transaction ID is required"),
+        }),
     profilePictureInfo: z.object({
       image: z.instanceof(File, { message: "Profile picture is required" }),
     }),
   });
+
+const RegistrationGuidelines = () => (
+  <Card className="mb-8">
+    <CardHeader className="text-center">
+      <CardTitle>Registration Guidelines</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div className="space-y-3">
+        <h3 className="font-semibold">Before You Begin:</h3>
+        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+          <li>Keep a formal passport size photograph ready (max 2MB)</li>
+          <li>All fields marked with * are mandatory</li>
+        </ul>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="font-semibold">Payment Instructions:</h3>
+        <div className="space-y-4">
+          <Collapsible>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-3 bg-muted/50">
+              <p className="font-medium">For Alumni:</p>
+              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="px-3 pt-2">
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>
+                  Check total payment amount in the form&apos;s payment section
+                </li>
+                <li>
+                  Bank Account Details:
+                  <ul className="list-none pl-4 pt-1 text-sm">
+                    <li>• Bank: Sonali Bank PLC</li>
+                    <li>• Branch: JKKNIU Branch, Mymensingh</li>
+                    <li>• Account Name: CSE Alumni, JKKNIU</li>
+                    <li>• Account Number: 3328202000127</li>
+                  </ul>
+                </li>
+                <li>
+                  Payment Methods:
+                  <ul className="list-none pl-4 pt-1 text-sm">
+                    <li>
+                      1. Bank Transfer: Provide your bank account number in the
+                      form
+                    </li>
+                    <li>
+                      2. Cash Deposit: Use your phone number as deposit
+                      reference
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-3 bg-muted/50">
+              <p className="font-medium">For Current Students:</p>
+              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="px-3 pt-2">
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>
+                  Submit registration fee (cash) to your Class Representative
+                </li>
+                <li>Complete registration form before payment</li>
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-red-200 p-3">
+        <p className="text-sm text-red-800 dark:text-red-200">
+          Note: Your registration will be confirmed via email after verification
+          of your payment and details. Please ensure all information provided is
+          accurate.
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const RegistrationSuccess = ({ onClose }) => {
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+  return (
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
+      <Card className="max-w-lg w-full mx-auto">
+        <CardHeader className="space-y-2">
+          <CardTitle className="flex items-center gap-3 text-xl md:text-2xl">
+            <CheckCircle2 className="h-6 w-6 text-green-500" />
+            Submission Successful
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm md:text-base">
+          <div className="space-y-3">
+            <p className="text-muted-foreground">
+              Thank you!
+            </p>
+            <p className="text-muted-foreground">
+              We have sent a confirmation email with your registration details.
+              You will receive another email once your registration is reviewed
+              and confirmed by our team.
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end pt-4">
+          <Button onClick={onClose} className="w-full sm:w-auto">
+            Back to Home
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+};
 
 const TODAY = new Date();
 
@@ -120,6 +259,7 @@ export default function Registration() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCurrentStudent, setIsCurrentStudent] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Add loading state for transaction id checking
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -343,7 +483,7 @@ export default function Registration() {
         total: 1,
       },
       paymentInfo: {
-        totalAmount: ADULT_FEE,
+        totalAmount: isCurrentStudent ? STUDENT_FEE : ADULT_FEE,
         mobileBankingName: "",
         status: 1,
         transactionId: "",
@@ -395,6 +535,9 @@ export default function Registration() {
         paymentInfo: {
           ...form.getValues().paymentInfo,
           totalAmount: STUDENT_FEE,
+          mobileBankingName: "",
+          status: 1,
+          transactionId: "",
         },
         profilePictureInfo: {
           image: "",
@@ -424,16 +567,15 @@ export default function Registration() {
       if (response.success) {
         toast({
           title: "Registration Complete",
-          description:
-            "Your data has been submitted. We will notify you once it's been verified. Thank You.",
+          description: "Your registration has been submitted successfully.",
         });
 
         form.reset();
-
+        setShowSuccess(true);
         // Redirect to home page after 3 seconds
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
+        // setTimeout(() => {
+        //   navigate("/");
+        // }, 3000);
       } else {
         toast({
           variant: "destructive",
@@ -458,8 +600,11 @@ export default function Registration() {
 
   return (
     <div className="relative min-h-screen mt-20">
+      {/* Show success modal when registration is complete */}
+      {showSuccess && <RegistrationSuccess onClose={() => navigate("/")} />}
       {/* Academis Status */}
-      <div className="max-w-sm mx-auto mb-8 px-8 sm:px-4">
+      <div className="container mx-auto px-8 sm:px-4 max-w-4xl">
+        <RegistrationGuidelines />
         <h2 className="text-lg sm:text-xl font-semibold text-center mb-4">
           Select Your Academic Status
         </h2>
@@ -1234,7 +1379,8 @@ export default function Registration() {
                 <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 p-4">
                   <p className="text-sm text-red-800 dark:text-red-200">
                     Please submit the registration fee (hand cash) to your
-                    respective batch&apos;s Class Representative after competing the registration.
+                    respective batch&apos;s Class Representative after competing
+                    the registration.
                   </p>
                 </div>
               ) : (
