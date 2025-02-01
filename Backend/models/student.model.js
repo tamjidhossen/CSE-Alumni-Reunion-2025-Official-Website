@@ -14,9 +14,9 @@ const studentSchema = new mongoose.Schema({
     },
     paymentInfo: {
         totalAmount: { type: Number, required: true },
-        mobileBankingName: { type: String, required: true },
+        mobileBankingName: { type: String, default: '' },
         status: { type: Number, required: true },
-        transactionId: { type: String, required: true }
+        transactionId: { type: String, default: '' }
     },
     profilePictureInfo: {
         image: { type: String, default: '' }

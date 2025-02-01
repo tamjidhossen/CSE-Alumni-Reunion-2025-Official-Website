@@ -17,10 +17,10 @@ const addStudent = async (req, res) => {
         // Parse and validate data from the request body
         const data = req.body;
         // Validate transaction ID
-        const existingStudent = await Student.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
-        if (existingStudent) {
-            return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
-        }
+        // const existingStudent = await Student.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
+        // if (existingStudent) {
+        //     return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
+        // }
 
         // Validate fees
         const totalFee = data.paymentInfo.totalAmount;
