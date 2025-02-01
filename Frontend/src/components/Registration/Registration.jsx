@@ -277,9 +277,8 @@ const RegistrationSuccess = ({ onClose }) => {
           <div className="space-y-3">
             <p className="text-muted-foreground">Thank you!</p>
             <p className="text-muted-foreground">
-              We have sent a confirmation email.
-              You will receive another email once your registration is reviewed
-              and confirmed by our team.
+              We have sent a confirmation email. You will receive another email
+              once your registration is reviewed and confirmed by our team.
             </p>
           </div>
         </CardContent>
@@ -551,6 +550,7 @@ export default function Registration() {
   // Watch for changes in adult and child numbers
   const adultCount = form.watch("numberOfParticipantInfo.adult");
   const childCount = form.watch("numberOfParticipantInfo.child") || 0;
+  const paymentMethod = form.watch("paymentInfo.mobileBankingName");
 
   useEffect(() => {
     // Reset form errors when switching status
@@ -1461,24 +1461,28 @@ export default function Registration() {
                   </div>
 
                   {/* Transaction Id */}
-                  <div className="col-span-6">
-                    <FormField
-                      control={form.control}
-                      name="paymentInfo.transactionId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Transaction Id
-                            <RequiredField value={field.value} />
-                          </FormLabel>
-                          <FormControl>
-                            <Input placeholder="" type="text" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {paymentMethod && (
+                    <div className="col-span-6">
+                      <FormField
+                        control={form.control}
+                        name="paymentInfo.transactionId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {paymentMethod === "bankTransfer"
+                                ? "Sender's Account Number"
+                                : "Reference Phone Number"}
+                              <RequiredField value={field.value} />
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="" type="text" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
