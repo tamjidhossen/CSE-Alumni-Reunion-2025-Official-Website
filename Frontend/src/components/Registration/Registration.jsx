@@ -277,7 +277,7 @@ const RegistrationSuccess = ({ onClose }) => {
           <div className="space-y-3">
             <p className="text-muted-foreground">Thank you!</p>
             <p className="text-muted-foreground">
-              We have sent a confirmation email with your registration details.
+              We have sent a confirmation email.
               You will receive another email once your registration is reviewed
               and confirmed by our team.
             </p>
