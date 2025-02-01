@@ -9,7 +9,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, School, CheckCircle2, ChevronDown } from "lucide-react";
+import {
+  GraduationCap,
+  School,
+  CheckCircle2,
+  ChevronDown,
+  Building2,
+  CreditCard,
+  Banknote,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -160,25 +168,59 @@ const RegistrationGuidelines = () => (
                 <li>
                   Check total payment amount in the form&apos;s payment section
                 </li>
-                <li>
-                  Bank Account Details:
-                  <ul className="list-none pl-4 pt-1 text-sm">
-                    <li>• Bank: Sonali Bank PLC</li>
-                    <li>• Branch: JKKNIU Branch, Mymensingh</li>
-                    <li>• Account Name: CSE Alumni, JKKNIU</li>
-                    <li>• Account Number: 3328202000127</li>
-                  </ul>
+                <li className="!list-none">
+                  <Card className="border-muted">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Bank Account Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-2 text-sm">
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Bank:</span>
+                          <span>Sonali Bank PLC</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Branch:</span>
+                          <span>JKKNIU Branch, Mymensingh</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Account:</span>
+                          <span>CSE Alumni, JKKNIU</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">A/C No:</span>
+                          <span className="font-mono">3328202000127</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Routing No:</span>
+                          <span className="font-mono">200610140</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Branch Code:</span>
+                          <span className="font-mono">014</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </li>
                 <li>
                   Payment Methods:
-                  <ul className="list-none pl-4 pt-1 text-sm">
-                    <li>
-                      1. Bank Transfer: Provide your bank account number in the
-                      form
+                  <ul className="mt-2 space-y-2 pl-4">
+                    <li className="flex gap-2 items-start">
+                      <CreditCard className="h-4 w-4 mt-1 shrink-0" />
+                      <span>
+                        Bank Transfer: Provide your bank account number in the
+                        form
+                      </span>
                     </li>
-                    <li>
-                      2. Cash Deposit: Use your phone number as deposit
-                      reference
+                    <li className="flex gap-2 items-start">
+                      <Banknote className="h-4 w-4 mt-1 shrink-0" />
+                      <span>
+                        Cash Deposit: Use your phone number as deposit reference
+                      </span>
                     </li>
                   </ul>
                 </li>
@@ -233,9 +275,7 @@ const RegistrationSuccess = ({ onClose }) => {
         </CardHeader>
         <CardContent className="space-y-4 text-sm md:text-base">
           <div className="space-y-3">
-            <p className="text-muted-foreground">
-              Thank you!
-            </p>
+            <p className="text-muted-foreground">Thank you!</p>
             <p className="text-muted-foreground">
               We have sent a confirmation email with your registration details.
               You will receive another email once your registration is reviewed
