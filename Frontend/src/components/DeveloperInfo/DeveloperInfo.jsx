@@ -22,7 +22,7 @@ export default function DeveloperInfo() {
     {
       name: "Nabeel Ahsan ",
       // title: "Full Stack Developer",
-      image: "/nabeelahsanProfile.jpg",
+      image: "/nabeelahsanProfile.jpeg",
       bio: "Final year student at CSE, JKKNIU. Passionate about building scalable web applications and solving complex problems.",
       links: {
         github: "https://github.com/Nabeel-Ahsan7",
