@@ -784,12 +784,12 @@ const RegistrationTable = ({
                                   {reg.contactInfo.email}
                                 </span>
                               </div>
-                              <div className="p-3 bg-muted rounded-lg flex items-center gap-3">
+                              {reg.contactInfo.currentAddress && (<div className="p-3 bg-muted rounded-lg flex items-center gap-3">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm">
                                   {reg.contactInfo.currentAddress}
                                 </span>
-                              </div>
+                              </div>)}
                             </CardContent>
                           </Card>
                         </div>
