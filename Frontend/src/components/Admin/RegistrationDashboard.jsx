@@ -895,22 +895,32 @@ const RegistrationTable = ({
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                              <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">
-                                  Method
-                                </span>
-                                <Badge variant="outline">
-                                  {reg.paymentInfo.mobileBankingName}
-                                </Badge>
-                              </div>
-                              <div className="p-2 sm:p-3 bg-muted rounded-lg grid grid-cols-[auto,1fr] gap-4">
-                                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                  Transaction ID
-                                </span>
-                                <span className="text-sm font-mono text-right break-all overflow-hidden">
-                                  {reg.paymentInfo.transactionId}
-                                </span>
-                              </div>
+                              {/* Only show method and transaction ID for alumni */}
+                              {reg.professionalInfo && (
+                                <>
+                                  <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">
+                                      Method
+                                    </span>
+                                    <Badge variant="outline">
+                                      {reg.paymentInfo.mobileBankingName ===
+                                      "bankTransfer"
+                                        ? "Bank Transfer"
+                                        : "Cash Deposit"}
+                                    </Badge>
+                                  </div>
+                                  <div className="p-2 sm:p-3 bg-muted rounded-lg grid grid-cols-[auto,1fr] gap-4">
+                                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                      Transaction ID
+                                    </span>
+                                    <span className="text-sm font-mono text-right break-all overflow-hidden">
+                                      {reg.paymentInfo.transactionId}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Show amount and status for all */}
                               <div className="p-3 bg-muted rounded-lg flex items-center justify-between">
                                 <span className="text-sm text-muted-foreground">
                                   Amount
