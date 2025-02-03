@@ -10,6 +10,15 @@ import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFDownloadLink,
+  Image,
+} from "@react-pdf/renderer";
+import {
   GraduationCap,
   School,
   CheckCircle2,
@@ -72,6 +81,7 @@ import {
   CHILD_FEE,
   STUDENT_FEE,
   MAX_FILE_SIZE,
+  API_URL,
 } from "@/lib/authConfig";
 
 const formSchema = (isCurrentStudent) =>
@@ -161,7 +171,10 @@ const RegistrationGuidelines = () => (
         <h3 className="font-semibold">Before You Begin:</h3>
         <ul className="list-disc list-inside space-y-2 text-muted-foreground">
           <li>Keep a formal passport size photograph ready (max 2MB)</li>
-          <li>All fields marked with <span className="text-red-500">*</span> are mandatory</li>
+          <li>
+            All fields marked with <span className="text-red-500">*</span> are
+            mandatory
+          </li>
         </ul>
       </div>
 
@@ -266,8 +279,418 @@ const RegistrationGuidelines = () => (
   </Card>
 );
 
-const RegistrationSuccess = ({ onClose }) => {
-  // Lock body scroll when modal is open
+const InvoicePDF = ({ data }) => {
+  const isStudent = !data.professionalInfo;
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>CSE Alumni Reunion - 2025</Text>
+            <Text style={styles.subtitle}>
+              Jatiya Kabi Kazi Nazrul Islam University
+            </Text>
+            <Text style={styles.subtitle}>Trishal, Mymensingh</Text>
+          </View>
+
+          <View style={styles.receiptInfo}>
+            <Text style={styles.receiptTitle}>Registration Receipt</Text>
+            <View style={styles.receiptDetails}>
+              <Text style={styles.receiptText}>
+                Date: {new Date(data.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Main Content */}
+        <View style={styles.content}>
+          {/* Left Column */}
+          <View style={styles.leftColumn}>
+            {/* Personal Info */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Name</Text>
+                  <Text style={styles.value}>{data.personalInfo.name}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Roll</Text>
+                  <Text style={styles.value}>{data.personalInfo.roll}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Registration</Text>
+                  <Text style={styles.value}>
+                    {data.personalInfo.registrationNo}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Session</Text>
+                  <Text style={styles.value}>{data.personalInfo.session}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Category</Text>
+                  <Text style={styles.badge}>
+                    {isStudent ? "Current Student" : "Alumni"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Contact Info */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Contact Information</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Mobile</Text>
+                  <Text style={styles.value}>{data.contactInfo.mobile}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Email</Text>
+                  <Text style={styles.value}>{data.contactInfo.email}</Text>
+                </View>
+                {data.contactInfo.currentAddress && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Address</Text>
+                    <Text style={styles.value}>
+                      {data.contactInfo.currentAddress}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Right Column */}
+          <View style={styles.rightColumn}>
+            {/* Professional Info - Alumni Only */}
+            {!isStudent && data.professionalInfo && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>
+                  Professional Information
+                </Text>
+                <View style={styles.card}>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Current Designation</Text>
+                    <Text style={styles.value}>
+                      {data.professionalInfo.currentDesignation || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Organization</Text>
+                    <Text style={styles.value}>
+                      {data.professionalInfo.currentOrganization || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>From</Text>
+                    <Text style={styles.value}>
+                      {data.professionalInfo.from
+                        ? new Date(
+                            data.professionalInfo.from
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>To</Text>
+                    <Text style={styles.value}>Present</Text>
+                  </View>
+                </View>
+
+                {/* Previous Experience */}
+                {data.prevProfessionalInfo?.length > 0 && (
+                  <View style={styles.subSection}>
+                    <Text style={styles.subSectionTitle}>
+                      Previous Experience
+                    </Text>
+                    {data.prevProfessionalInfo.map((prev, index) => (
+                      <View key={index} style={styles.experienceCard}>
+                        <View style={styles.row}>
+                          <Text style={styles.label}>Designation</Text>
+                          <Text style={styles.value}>
+                            {prev.designation || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={styles.row}>
+                          <Text style={styles.label}>Organization</Text>
+                          <Text style={styles.value}>
+                            {prev.organization || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={styles.row}>
+                          <Text style={styles.label}>Period</Text>
+                          <Text style={styles.value}>
+                            {prev.from
+                              ? new Date(prev.from).toLocaleDateString()
+                              : "N/A"}{" "}
+                            -
+                            {prev.to
+                              ? new Date(prev.to).toLocaleDateString()
+                              : "N/A"}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Payment Info */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Payment Information</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Total Amount</Text>
+                  <Text style={styles.amount}>
+                    {data.paymentInfo.totalAmount} Tk
+                  </Text>
+                </View>
+                {!isStudent && (
+                  <>
+                    <View style={styles.row}>
+                      <Text style={styles.label}>Payment Method</Text>
+                      <Text style={styles.value}>
+                        {data.paymentInfo.mobileBankingName === "bankTransfer"
+                          ? "Bank Transfer"
+                          : "Cash Deposit"}
+                      </Text>
+                    </View>
+                    {data.paymentInfo.transactionId && (
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Reference</Text>
+                        <Text style={styles.value}>
+                          {data.paymentInfo.transactionId}
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                )}
+                <View style={styles.statusRow}>
+                  <Text style={styles.statusLabel}>Payment Status</Text>
+                  <Text
+                    style={[
+                      styles.statusBadge,
+                      data.paymentInfo.status === 1
+                        ? styles.statusApproved
+                        : data.paymentInfo.status === 2
+                        ? styles.statusRejected
+                        : styles.statusPending,
+                    ]}
+                  >
+                    {data.paymentInfo.status === 1
+                      ? "Approved"
+                      : data.paymentInfo.status === 2
+                      ? "Rejected"
+                      : "Pending"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Registration ID: {data._id}</Text>
+          <Text style={styles.footerNote}>
+            This is a computer-generated document. No signature is required.
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+// Updated styles for better layout
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    backgroundColor: "#ffffff",
+    fontFamily: "Helvetica",
+  },
+  header: {
+    marginBottom: 20,
+  },
+  headerContent: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1e40af",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: "#64748b",
+    marginBottom: 2,
+  },
+  receiptInfo: {
+    backgroundColor: "#f8fafc",
+    padding: 12,
+    borderRadius: 4,
+    alignItems: "center",
+  },
+  receiptTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#334155",
+    marginBottom: 8,
+  },
+  receiptDetails: {
+    width: "100%",
+    alignItems: "center",
+  },
+  receiptText: {
+    fontSize: 10,
+    color: "#64748b",
+    marginBottom: 2,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+    marginBottom: 20,
+  },
+  content: {
+    flexDirection: "row",
+    gap: 20,
+  },
+  leftColumn: {
+    flex: 1,
+  },
+  rightColumn: {
+    flex: 1,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1e40af",
+    backgroundColor: "#f1f5f9",
+    padding: 8,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 4,
+    padding: 12,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+  },
+  label: {
+    fontSize: 10,
+    color: "#64748b",
+    flex: 1,
+  },
+  value: {
+    fontSize: 10,
+    color: "#334155",
+    flex: 1,
+    textAlign: "right",
+  },
+  amount: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#1e40af",
+  },
+  badge: {
+    fontSize: 10,
+    color: "#1e40af",
+    backgroundColor: "#dbeafe",
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  subSection: {
+    marginTop: 12,
+  },
+  subSectionTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#475569",
+    marginBottom: 8,
+  },
+  experienceCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+  },
+  statusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+  },
+  statusLabel: {
+    fontSize: 10,
+    color: "#64748b",
+  },
+  statusBadge: {
+    fontSize: 10,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  statusPending: {
+    backgroundColor: "#fef9c3",
+    color: "#854d0e",
+  },
+  statusApproved: {
+    backgroundColor: "#dcfce7",
+    color: "#166534",
+  },
+  statusRejected: {
+    backgroundColor: "#fee2e2",
+    color: "#991b1b",
+  },
+  footer: {
+    position: "absolute",
+    bottom: 40,
+    left: 40,
+    right: 40,
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    paddingTop: 20,
+  },
+  footerText: {
+    fontSize: 8,
+    color: "#64748b",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  footerNote: {
+    fontSize: 8,
+    color: "#94a3b8",
+    textAlign: "center",
+  },
+});
+
+const RegistrationSuccess = ({ onClose, registrationData }) => {
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -291,6 +714,19 @@ const RegistrationSuccess = ({ onClose }) => {
               once your registration is reviewed and confirmed by our team.
             </p>
           </div>
+
+          {/* Download Invoice Button */}
+          <div className="flex items-center justify-center pt-4">
+            <PDFDownloadLink
+              document={<InvoicePDF data={registrationData} />}
+              fileName={`registration_invoice_${registrationData.personalInfo.roll}.pdf`}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {({ blob, url, loading, error }) =>
+                loading ? "Generating Invoice..." : "Download Invoice"
+              }
+            </PDFDownloadLink>
+          </div>
         </CardContent>
         <CardFooter className="flex justify-end pt-4">
           <Button onClick={onClose} className="w-full sm:w-auto">
@@ -309,6 +745,7 @@ export default function Registration() {
   const { toast } = useToast();
   const [isCurrentStudent, setIsCurrentStudent] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [registrationResponse, setRegistrationResponse] = useState(null);
 
   // Add loading state for transaction id checking
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -615,17 +1052,13 @@ export default function Registration() {
         : registrationApi.submitAlumniForm(values));
 
       if (response.success) {
-        toast({
-          title: "Registration Complete",
-          description: "Your registration has been submitted successfully.",
-        });
-
+        // toast({
+        //   title: "Registration Complete",
+        //   description: "Your registration has been submitted successfully.",
+        // });
+        setRegistrationResponse(response.data);
         form.reset();
         setShowSuccess(true);
-        // Redirect to home page after 3 seconds
-        // setTimeout(() => {
-        //   navigate("/");
-        // }, 3000);
       } else {
         toast({
           variant: "destructive",
@@ -651,7 +1084,12 @@ export default function Registration() {
   return (
     <div className="relative min-h-screen mt-20">
       {/* Show success modal when registration is complete */}
-      {showSuccess && <RegistrationSuccess onClose={() => navigate("/")} />}
+      {showSuccess && (
+        <RegistrationSuccess
+          onClose={() => navigate("/")}
+          registrationData={registrationResponse}
+        />
+      )}
       {/* Academis Status */}
       <div className="container mx-auto px-8 sm:px-4 max-w-4xl">
         <RegistrationGuidelines />
