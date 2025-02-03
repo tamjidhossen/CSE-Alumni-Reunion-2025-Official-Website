@@ -28,7 +28,7 @@ export default function Home() {
     {
       icon: Users,
       title: "Expected Attendees",
-      content: "300+ Alumni Members\nFaculty Members",
+      content: "500+ Alumni Members\nFaculty Members",
     },
   ];
 

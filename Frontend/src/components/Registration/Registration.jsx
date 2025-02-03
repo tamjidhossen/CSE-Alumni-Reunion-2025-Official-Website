@@ -88,7 +88,17 @@ const formSchema = (isCurrentStudent) =>
         : z.string().min(1, "Year of Certificate Awarded is required"),
     }),
     contactInfo: z.object({
-      mobile: z.string().min(1, "Mobile number is required"),
+      mobile: z
+        .string()
+        .min(1, "Mobile number is required")
+        .regex(
+          /^(013|014|015|016|017|018|019)\d{8}$/,
+          "Invalid mobile number format. Must be a valid Bangladeshi number"
+        )
+        .refine(
+          (value) => value.length === 11,
+          "Mobile number must be exactly 11 digits"
+        ),
       email: z.string().email("Invalid email address"),
       currentAddress: z.string().optional(),
     }),
@@ -151,7 +161,7 @@ const RegistrationGuidelines = () => (
         <h3 className="font-semibold">Before You Begin:</h3>
         <ul className="list-disc list-inside space-y-2 text-muted-foreground">
           <li>Keep a formal passport size photograph ready (max 2MB)</li>
-          <li>All fields marked with * are mandatory</li>
+          <li>All fields marked with <span className="text-red-500">*</span> are mandatory</li>
         </ul>
       </div>
 
@@ -995,9 +1005,9 @@ export default function Registration() {
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder=""
+                            placeholder="01XXXXXXXXX"
                             type="text"
-                            pattern="[0-9]+"
+                            maxLength={11}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -1061,6 +1071,11 @@ export default function Registration() {
               <h2 className="text-xl font-semibold border-b pb-2">
                 Professional Information
               </h2>
+              <FormDescription className="text-sm text-muted-foreground">
+                Feel free to share your professional journey with us. This helps
+                build our alumni network and creates opportunities for
+                mentorship and collaboration.
+              </FormDescription>
               <div className="space-y-6">
                 {/* Input Current Designation */}
                 <FormField
@@ -1371,7 +1386,11 @@ export default function Registration() {
                       name="numberOfParticipantInfo.child"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Child</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <FormLabel>Child </FormLabel>
+                            <FormDescription>(Above 5 years)</FormDescription>
+                          </div>
+
                           <FormControl>
                             <Input
                               placeholder=""
