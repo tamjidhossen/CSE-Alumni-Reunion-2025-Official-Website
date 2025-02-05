@@ -1,14 +1,13 @@
-name: reunion-test
+name: reunion-test-prod
 
 services:
   mongo:
     image: mongo:8.0.4
-    ports:
-      - 27017:27017
     volumes:
       - mongo_data:/data/db
     networks:
-      - reunion-test-network
+      - reunion-test-prod-network
+    restart: unless-stopped
 
   backend:
     build:
@@ -17,13 +16,9 @@ services:
     restart: unless-stopped
     env_file: ./Backend/.env
     volumes:
-      - ./Backend:/app
-      - /app/node_modules
       - ../uploads/images:/app/uploads/images
     networks:
-      - reunion-test-network
-    ports:
-      - 4000:4000
+      - reunion-test-prod-network
     depends_on:
       - mongo
 
@@ -34,19 +29,32 @@ services:
     restart: unless-stopped
     env_file: ./Frontend/.env
     volumes:
-      - ./Frontend:/app
-      - /app/node_modules
+      - frontend_build:/app/dist
     networks:
-      - reunion-test-network
-    ports:
-      - 5173:5173
-    command: npm run dev -- --host
+      - reunion-test-prod-network
     depends_on:
       - backend
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - frontend_build:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - reunion-test-prod-network
 
 volumes:
   mongo_data:
   uploaded_images:
+  caddy_data:
+  caddy_config:
+
 networks:
-  reunion-test-network:
+  reunion-test-prod-network:
     driver: bridge

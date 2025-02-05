@@ -1,0 +1,36 @@
+:80 {
+    # Rate limiting
+    @api {
+        path /api/*
+    }
+    handle @api {
+        rate_limit {
+            zone dynamic_zone {
+                key {remote_ip}
+                events 100
+                window 60s
+            }
+        }
+        reverse_proxy backend:4000
+    }
+
+    # Static file serving
+    handle /* {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000;"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        X-XSS-Protection "1; mode=block"
+        X-Frame-Options "DENY"
+        Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; connect-src 'self';"
+    }
+
+    # Enable compression
+    encode gzip
+}
