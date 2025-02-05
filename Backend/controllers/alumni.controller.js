@@ -64,7 +64,7 @@ const addAlumni = async (req, res) => {
       //For docker
       // const uploadDir = '/app/uploads/images';
       //local
-      const uploadDir = path.join(__dirname, "../local-uploads");
+      const uploadDir = path.join(__dirname, "../uploads/images");
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
@@ -151,7 +151,7 @@ const updateAlumni = async (req, res) => {
       //For docker
       // const uploadDir = '/app/uploads/images';
       //local
-      const uploadDir = path.join(__dirname, "../../local-uploads");
+      const uploadDir = path.join(__dirname, "../uploads/images");
       newImagePath = `${updateData.personalInfo.roll}_${Date.now()}-${
         req.file.originalname
       }`;

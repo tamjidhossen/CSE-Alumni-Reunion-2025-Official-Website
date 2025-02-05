@@ -53,7 +53,8 @@ const addStudent = async (req, res) => {
             //for docker
             // const uploadDir = '/app/uploads/images';
             //local
-            const uploadDir = path.join(__dirname, '../local-uploads');
+            const uploadDir = path.join(__dirname, "../uploads/images");
+            console.log('Upload path-stud:', uploadDir);
             // Create directory if it doesn't exist
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
@@ -118,7 +119,7 @@ const updateStudent = async (req, res) => {
             //For docker
             // const uploadDir = '/app/uploads/images';
             //local
-            const uploadDir = path.join(__dirname, '../../local-uploads');
+            const uploadDir = path.join(__dirname, "../uploads/images");
             const newImagePath = `${uploadDir}/${updateData.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
 
             // Delete the old image if it exists

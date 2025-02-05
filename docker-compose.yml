@@ -19,7 +19,7 @@ services:
     volumes:
       - ./Backend:/app
       - /app/node_modules
-      - ./local-uploads:/app/local-uploads
+      - ../uploads/images:/app/uploads/images
     networks:
       - reunion-test-network
     ports:
