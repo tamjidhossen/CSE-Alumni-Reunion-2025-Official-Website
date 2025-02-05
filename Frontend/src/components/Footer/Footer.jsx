@@ -71,11 +71,11 @@ const Footer = () => {
               href="mailto:info@example.com"
               className="text-gray-400 hover:text-gray-500"
             >
-              info@example.com
+              msujanali@gmail.com
             </a>
           </p>
           <p className="text-sm md:text-base ">
-            Phone: <span className="text-gray-400">+123 456 7890</span>
+            Phone: <span className="text-gray-400">01732155234</span>
           </p>
           <div className="flex space-x-4 mt-2">
             <a
@@ -87,7 +87,7 @@ const Footer = () => {
               <FaFacebook size={24} />
             </a>
             <a
-              href="mailto:info@example.com"
+              href="mailto:msujanali@gmail.com"
               className="text-gray-400 hover:text-gray-500"
             >
               <FaEnvelope size={24} />

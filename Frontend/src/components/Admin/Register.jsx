@@ -93,11 +93,19 @@ export default function AdminRegister() {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/api/admin/register`, {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await axios.post(
+        `${API_URL}/api/admin/register`,
+        {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+          },
+        }
+      );
 
       if (response.data.success) {
         toast({

@@ -1,12 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const Alumni = require('../models/alumni.model.js');
-
+// const emailService = require('../Services/mail.service.js')
 const addAlumni = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                console.log(key)
                 // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
@@ -16,7 +15,6 @@ const addAlumni = async (req, res) => {
         });
 
         const data = req.body;
-        console.log(data);
         // Validate transaction ID
         const existingAlumni = await Alumni.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
         if (existingAlumni) {
@@ -58,9 +56,12 @@ const addAlumni = async (req, res) => {
 
         // Handle image saving after database insertion
         if (req.file) {
-            const uploadDir = path.join(__dirname, '../uploads/images');
+            const uploadDir = path.join(__dirname, '../../../uploads/images');
+
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
             const filePath = `${uploadDir}/${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
-            console.log(filePath)
             fs.writeFile(filePath, req.file.buffer, async (err) => {
                 if (err) {
                     // Rollback database entry if file saving fails
@@ -71,7 +72,7 @@ const addAlumni = async (req, res) => {
                 // Update the alumni record with the image path
                 savedAlumni.profilePictureInfo.image = filePath;
                 await savedAlumni.save();
-
+                // emailService.sendRegistrationMail(data.contactInfo.email, "Successfully Registered!", data);
                 res.status(201).json({
                     success: true,
                     message: 'Alumni registered successfully',
@@ -91,7 +92,6 @@ const addAlumni = async (req, res) => {
 };
 
 const getAlumni = async (req, res) => {
-    console.log("hi")
     try {
         // Fetch all alumni from the database
         const alumni = await Alumni.find();
@@ -233,7 +233,8 @@ const paymentUpdate = async (req, res) => {
             : status === '0'
                 ? 'Not Paid'
                 : 'Rejected';
-
+        // if (status === '1') emailService.sendPaymentConfirmationMail(alumni.contactInfo.email, "Payment Update", alumni)
+        // else emailService.sendPaymentRejectionMail(alumni.contactInfo.email, "Payment Rejected", alumni)
         res.json({
             success: true,
             message: `Payment status updated to ${statusMessage}`,

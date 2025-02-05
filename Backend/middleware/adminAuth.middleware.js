@@ -7,7 +7,6 @@ module.exports.authAdmin = async (req, res, next) => {
     if (!token && req.cookies && req.cookies.token) {
         token = req.cookies.token;
     }
-    console.log(req.cookies)
     if (!token) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }

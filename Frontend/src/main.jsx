@@ -9,6 +9,7 @@ import AdminLogin from './components/Admin/Login'
 import Dashboard from './components/Admin/Dashboard'
 import ProtectedRoute from './components/Admin/ProtectedRoute'
 import AdminRegister from './components/Admin/Register'
+import DeveloperInfo from "./components/DeveloperInfo/DeveloperInfo";
 import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
 
 const router = createBrowserRouter(
@@ -18,6 +19,7 @@ const router = createBrowserRouter(
         <Route path="" element={<Home />} />
         <Route path="registration" element={<Registration />} />
         <Route path="announcements" element={<Announcements />} />
+        <Route path="developer-info" element={<DeveloperInfo />} />
       </Route>
       <Route path="/admin">
         <Route path="register" element={<AdminRegister />} />

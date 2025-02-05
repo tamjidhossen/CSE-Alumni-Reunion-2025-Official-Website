@@ -28,7 +28,7 @@ export default function Home() {
     {
       icon: Users,
       title: "Expected Attendees",
-      content: "300+ Alumni Members\nFaculty Members",
+      content: "500+ Alumni Members\nFaculty Members",
     },
   ];
 
@@ -70,6 +70,11 @@ export default function Home() {
         </div>
 
         <div className="container mx-auto px-4 text-center">
+          <div className="text-xl sm:text-2xl md:text-4xl font-bold tracking-tight mb-1">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+              First Ever
+            </span>
+          </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight mb-4 sm:mb-6">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
               CSE Alumni Reunion 2025

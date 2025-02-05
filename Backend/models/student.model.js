@@ -10,13 +10,16 @@ const studentSchema = new mongoose.Schema({
     contactInfo: {
         mobile: { type: String, required: true },
         email: { type: String, required: true },
-        currentAddress: { type: String, required: true }
+        currentAddress: { type: String, required: false }
     },
     paymentInfo: {
         totalAmount: { type: Number, required: true },
-        mobileBankingName: { type: String, required: true },
+        mobileBankingName: { type: String, default: '' },
         status: { type: Number, required: true },
-        transactionId: { type: String, required: true }
+        transactionId: { type: String, default: '' }
+    },
+    profilePictureInfo: {
+        image: { type: String, default: '' }
     }
 }, { timestamps: true });
 

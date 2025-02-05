@@ -1,13 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const Student = require('../models/student.model.js');
-
+// const emailService = require('../Services/mail.service.js')
 // Add new student
 const addStudent = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                console.log(key)
                 // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
@@ -15,15 +14,13 @@ const addStudent = async (req, res) => {
                 // If parsing fails, you can keep the original value or handle the error accordingly
             }
         });
-
-        console.log(req.body)
         // Parse and validate data from the request body
         const data = req.body;
         // Validate transaction ID
-        const existingStudent = await Student.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
-        if (existingStudent) {
-            return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
-        }
+        // const existingStudent = await Student.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
+        // if (existingStudent) {
+        //     return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
+        // }
 
         // Validate fees
         const totalFee = data.paymentInfo.totalAmount;
@@ -45,15 +42,39 @@ const addStudent = async (req, res) => {
             personalInfo: data.personalInfo,
             contactInfo: data.contactInfo,
             paymentInfo: data.paymentInfo,
+            profilePictureInfo: {},
         });
 
         // Save the student data to the database
         const savedStudent = await student.save();
-        res.status(201).json({
-            success: true,
-            message: 'Student registered successfully',
-            data: savedStudent,
-        });
+        // Handle image saving after database insertion
+        if (req.file) {
+            const uploadDir = path.join(__dirname, '../../../uploads/images');
+
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filePath = `${uploadDir}/${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            fs.writeFile(filePath, req.file.buffer, async (err) => {
+                if (err) {
+                    // Rollback database entry if file saving fails
+                    await Student.findByIdAndDelete(savedStudent._id);
+                    return res.status(500).json({ success: false, message: 'Failed to save the image' });
+                }
+
+                // Update the alumni record with the image path
+                savedStudent.profilePictureInfo.image = filePath;
+                await savedStudent.save();
+                // emailService.sendStudentConfirmationMail(data.contactInfo.email, "Successfully Registered!", savedStudent);
+                res.status(201).json({
+                    success: true,
+                    message: 'Student registered successfully',
+                    data: savedStudent,
+                });
+            });
+        } else {
+            return res.status(400).json({ success: false, message: 'Profile picture is required' });
+        }
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -169,7 +190,8 @@ const paymentUpdate = async (req, res) => {
             : status === '0'
                 ? 'Not Paid'
                 : 'Rejected';
-
+        // if (status === '1') emailService.sendPaymentConfirmationMail(student.contactInfo.email, "Payment Update", student)
+        // else emailService.sendPaymentRejectionMail(student.contactInfo.email, "Payment Rejected", student)
         res.json({
             success: true,
             message: `Payment status updated to ${statusMessage}`,

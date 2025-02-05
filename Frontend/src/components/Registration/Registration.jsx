@@ -9,7 +9,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, School } from "lucide-react";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFDownloadLink,
+  Image,
+} from "@react-pdf/renderer";
+import {
+  GraduationCap,
+  School,
+  CheckCircle2,
+  ChevronDown,
+  Building2,
+  CreditCard,
+  Banknote,
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import {
@@ -52,6 +81,7 @@ import {
   CHILD_FEE,
   STUDENT_FEE,
   MAX_FILE_SIZE,
+  API_URL,
 } from "@/lib/authConfig";
 
 const formSchema = (isCurrentStudent) =>
@@ -65,10 +95,20 @@ const formSchema = (isCurrentStudent) =>
       session: z.string().min(1, "Session is required"),
       passingYear: isCurrentStudent
         ? z.string().optional()
-        : z.string().min(1, "Passing Year is required"),
+        : z.string().min(1, "Year of Certificate Awarded is required"),
     }),
     contactInfo: z.object({
-      mobile: z.string().min(1, "Mobile number is required"),
+      mobile: z
+        .string()
+        .min(1, "Mobile number is required")
+        .regex(
+          /^(013|014|015|016|017|018|019)\d{8}$/,
+          "Invalid mobile number format. Must be a valid Bangladeshi number"
+        )
+        .refine(
+          (value) => value.length === 11,
+          "Mobile number must be exactly 11 digits"
+        ),
       email: z.string().email("Invalid email address"),
       currentAddress: z.string().optional(),
     }),
@@ -103,18 +143,600 @@ const formSchema = (isCurrentStudent) =>
           child: z.coerce.number().min(0).optional(),
           total: z.coerce.number().optional(),
         }),
-    paymentInfo: z.object({
-      totalAmount: z.coerce.number(),
-      mobileBankingName: z.string().min(1, "Payment method is required"),
-      status: z.coerce.number().default(1),
-      transactionId: z.string().min(1, "Transaction ID is required"),
-    }),
-    profilePictureInfo: isCurrentStudent
-      ? z.object({}).optional()
+    paymentInfo: isCurrentStudent
+      ? z.object({
+          totalAmount: z.coerce.number(),
+          mobileBankingName: z.string().optional(),
+          status: z.coerce.number().default(1),
+          transactionId: z.string().optional(),
+        })
       : z.object({
-          image: z.instanceof(File, { message: "Profile picture is required" }),
+          totalAmount: z.coerce.number(),
+          mobileBankingName: z.string().min(1, "Payment method is required"),
+          status: z.coerce.number().default(1),
+          transactionId: z.string().min(1, "Transaction ID is required"),
         }),
+    profilePictureInfo: z.object({
+      image: z.instanceof(File, { message: "Profile picture is required" }),
+    }),
   });
+
+const RegistrationGuidelines = () => (
+  <Card className="mb-8">
+    <CardHeader className="text-center">
+      <CardTitle>Registration Guidelines</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-6">
+      <div className="space-y-3">
+        <h3 className="font-semibold">Before You Begin:</h3>
+        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+          <li>Keep a formal passport size photograph ready (max 2MB)</li>
+          <li>
+            All fields marked with <span className="text-red-500">*</span> are
+            mandatory
+          </li>
+        </ul>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="font-semibold">Payment Instructions:</h3>
+        <div className="space-y-4">
+          <Collapsible>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-3 bg-muted/50">
+              <p className="font-medium">For Alumni:</p>
+              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="px-3 pt-2">
+              <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                <li>
+                  Check total payment amount in the form&apos;s payment section
+                </li>
+                <li className="!list-none">
+                  <Card className="border-muted">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Bank Account Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid gap-2 text-sm">
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Bank:</span>
+                          <span>Sonali Bank PLC</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Branch:</span>
+                          <span>JKKNIU Branch, Mymensingh</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Account:</span>
+                          <span>CSE Alumni, JKKNIU</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">A/C No:</span>
+                          <span className="font-mono">3328202000127</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Routing No:</span>
+                          <span className="font-mono">200610140</span>
+                        </div>
+                        <div className="grid grid-cols-[100px,1fr] items-center">
+                          <span className="font-medium">Branch Code:</span>
+                          <span className="font-mono">014</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </li>
+                <li>
+                  Payment Methods:
+                  <ul className="mt-2 space-y-2 pl-4">
+                    <li className="flex gap-2 items-start">
+                      <CreditCard className="h-4 w-4 mt-1 shrink-0" />
+                      <span>
+                        Bank Transfer: Provide your bank account number in the
+                        form
+                      </span>
+                    </li>
+                    <li className="flex gap-2 items-start">
+                      <Banknote className="h-4 w-4 mt-1 shrink-0" />
+                      <span>
+                        Cash Deposit: Use your phone number as deposit reference
+                      </span>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Collapsible>
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-3 bg-muted/50">
+              <p className="font-medium">For Current Students:</p>
+              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="px-3 pt-2">
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>
+                  Submit registration fee (cash) to your Class Representative
+                </li>
+                <li>Complete registration form before payment</li>
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-red-200 p-3">
+        <p className="text-sm text-red-800 dark:text-red-200">
+          Note: Your registration will be confirmed via email after verification
+          of your payment and details. Please ensure all information provided is
+          accurate.
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const InvoicePDF = ({ data }) => {
+  const isStudent = !data.professionalInfo;
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.title}>CSE Alumni Reunion - 2025</Text>
+            <Text style={styles.subtitle}>
+              Jatiya Kabi Kazi Nazrul Islam University
+            </Text>
+            <Text style={styles.subtitle}>Trishal, Mymensingh</Text>
+          </View>
+
+          <View style={styles.receiptInfo}>
+            <Text style={styles.receiptTitle}>Registration Receipt</Text>
+            <View style={styles.receiptDetails}>
+              <Text style={styles.receiptText}>
+                Date: {new Date(data.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Main Content */}
+        <View style={styles.content}>
+          {/* Left Column */}
+          <View style={styles.leftColumn}>
+            {/* Personal Info */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Name</Text>
+                  <Text style={styles.value}>{data.personalInfo.name}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Roll</Text>
+                  <Text style={styles.value}>{data.personalInfo.roll}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Registration</Text>
+                  <Text style={styles.value}>
+                    {data.personalInfo.registrationNo}
+                  </Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Session</Text>
+                  <Text style={styles.value}>{data.personalInfo.session}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Category</Text>
+                  <Text style={styles.badge}>
+                    {isStudent ? "Current Student" : "Alumni"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Contact Info */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Contact Information</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Mobile</Text>
+                  <Text style={styles.value}>{data.contactInfo.mobile}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Email</Text>
+                  <Text style={styles.value}>{data.contactInfo.email}</Text>
+                </View>
+                {data.contactInfo.currentAddress && (
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Address</Text>
+                    <Text style={styles.value}>
+                      {data.contactInfo.currentAddress}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Right Column */}
+          <View style={styles.rightColumn}>
+            {/* Professional Info - Alumni Only */}
+            {!isStudent && data.professionalInfo && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>
+                  Professional Information
+                </Text>
+                <View style={styles.card}>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Current Designation</Text>
+                    <Text style={styles.value}>
+                      {data.professionalInfo.currentDesignation || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Organization</Text>
+                    <Text style={styles.value}>
+                      {data.professionalInfo.currentOrganization || "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>From</Text>
+                    <Text style={styles.value}>
+                      {data.professionalInfo.from
+                        ? new Date(
+                            data.professionalInfo.from
+                          ).toLocaleDateString()
+                        : "N/A"}
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>To</Text>
+                    <Text style={styles.value}>Present</Text>
+                  </View>
+                </View>
+
+                {/* Previous Experience */}
+                {data.prevProfessionalInfo?.length > 0 && (
+                  <View style={styles.subSection}>
+                    <Text style={styles.subSectionTitle}>
+                      Previous Experience
+                    </Text>
+                    {data.prevProfessionalInfo.map((prev, index) => (
+                      <View key={index} style={styles.experienceCard}>
+                        <View style={styles.row}>
+                          <Text style={styles.label}>Designation</Text>
+                          <Text style={styles.value}>
+                            {prev.designation || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={styles.row}>
+                          <Text style={styles.label}>Organization</Text>
+                          <Text style={styles.value}>
+                            {prev.organization || "N/A"}
+                          </Text>
+                        </View>
+                        <View style={styles.row}>
+                          <Text style={styles.label}>Period</Text>
+                          <Text style={styles.value}>
+                            {prev.from
+                              ? new Date(prev.from).toLocaleDateString()
+                              : "N/A"}{" "}
+                            -
+                            {prev.to
+                              ? new Date(prev.to).toLocaleDateString()
+                              : "N/A"}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Payment Info */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Payment Information</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Total Amount</Text>
+                  <Text style={styles.amount}>
+                    {data.paymentInfo.totalAmount} Tk
+                  </Text>
+                </View>
+                {!isStudent && (
+                  <>
+                    <View style={styles.row}>
+                      <Text style={styles.label}>Payment Method</Text>
+                      <Text style={styles.value}>
+                        {data.paymentInfo.mobileBankingName === "bankTransfer"
+                          ? "Bank Transfer"
+                          : "Cash Deposit"}
+                      </Text>
+                    </View>
+                    {data.paymentInfo.transactionId && (
+                      <View style={styles.row}>
+                        <Text style={styles.label}>Reference</Text>
+                        <Text style={styles.value}>
+                          {data.paymentInfo.transactionId}
+                        </Text>
+                      </View>
+                    )}
+                  </>
+                )}
+                <View style={styles.statusRow}>
+                  <Text style={styles.statusLabel}>Payment Status</Text>
+                  <Text
+                    style={[
+                      styles.statusBadge,
+                      data.paymentInfo.status === 1
+                        ? styles.statusApproved
+                        : data.paymentInfo.status === 2
+                        ? styles.statusRejected
+                        : styles.statusPending,
+                    ]}
+                  >
+                    {data.paymentInfo.status === 1
+                      ? "Approved"
+                      : data.paymentInfo.status === 2
+                      ? "Rejected"
+                      : "Pending"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Registration ID: {data._id}</Text>
+          <Text style={styles.footerNote}>
+            This is a computer-generated document. No signature is required.
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+
+// Updated styles for better layout
+const styles = StyleSheet.create({
+  page: {
+    padding: 40,
+    backgroundColor: "#ffffff",
+    fontFamily: "Helvetica",
+  },
+  header: {
+    marginBottom: 20,
+  },
+  headerContent: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1e40af",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: "#64748b",
+    marginBottom: 2,
+  },
+  receiptInfo: {
+    backgroundColor: "#f8fafc",
+    padding: 12,
+    borderRadius: 4,
+    alignItems: "center",
+  },
+  receiptTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#334155",
+    marginBottom: 8,
+  },
+  receiptDetails: {
+    width: "100%",
+    alignItems: "center",
+  },
+  receiptText: {
+    fontSize: 10,
+    color: "#64748b",
+    marginBottom: 2,
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+    marginBottom: 20,
+  },
+  content: {
+    flexDirection: "row",
+    gap: 20,
+  },
+  leftColumn: {
+    flex: 1,
+  },
+  rightColumn: {
+    flex: 1,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1e40af",
+    backgroundColor: "#f1f5f9",
+    padding: 8,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 4,
+    padding: 12,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+  },
+  label: {
+    fontSize: 10,
+    color: "#64748b",
+    flex: 1,
+  },
+  value: {
+    fontSize: 10,
+    color: "#334155",
+    flex: 1,
+    textAlign: "right",
+  },
+  amount: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#1e40af",
+  },
+  badge: {
+    fontSize: 10,
+    color: "#1e40af",
+    backgroundColor: "#dbeafe",
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  subSection: {
+    marginTop: 12,
+  },
+  subSectionTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#475569",
+    marginBottom: 8,
+  },
+  experienceCard: {
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+  },
+  statusRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+  },
+  statusLabel: {
+    fontSize: 10,
+    color: "#64748b",
+  },
+  statusBadge: {
+    fontSize: 10,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  statusPending: {
+    backgroundColor: "#fef9c3",
+    color: "#854d0e",
+  },
+  statusApproved: {
+    backgroundColor: "#dcfce7",
+    color: "#166534",
+  },
+  statusRejected: {
+    backgroundColor: "#fee2e2",
+    color: "#991b1b",
+  },
+  footer: {
+    position: "absolute",
+    bottom: 40,
+    left: 40,
+    right: 40,
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    paddingTop: 20,
+  },
+  footerText: {
+    fontSize: 8,
+    color: "#64748b",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  footerNote: {
+    fontSize: 8,
+    color: "#94a3b8",
+    textAlign: "center",
+  },
+});
+
+const RegistrationSuccess = ({ onClose, registrationData }) => {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+  return (
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
+      <Card className="max-w-lg w-full mx-auto">
+        <CardHeader className="space-y-2">
+          <CardTitle className="flex items-center gap-3 text-xl md:text-2xl">
+            <CheckCircle2 className="h-6 w-6 text-green-500" />
+            Submission Successful
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm md:text-base">
+          <div className="space-y-3">
+            <p className="text-muted-foreground">Thank you!</p>
+            <p className="text-muted-foreground">
+              We have sent a confirmation email. You will receive another email
+              once your registration is reviewed and confirmed by our team.
+            </p>
+          </div>
+
+          {/* Download Invoice Button */}
+          <div className="flex items-center justify-center pt-4">
+            <PDFDownloadLink
+              document={<InvoicePDF data={registrationData} />}
+              fileName={`registration_invoice_${registrationData.personalInfo.roll}.pdf`}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {({ blob, url, loading, error }) =>
+                loading ? "Generating Invoice..." : "Download Invoice"
+              }
+            </PDFDownloadLink>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-end pt-4">
+          <Button onClick={onClose} className="w-full sm:w-auto">
+            Back to Home
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+};
 
 const TODAY = new Date();
 
@@ -122,6 +744,8 @@ export default function Registration() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCurrentStudent, setIsCurrentStudent] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [registrationResponse, setRegistrationResponse] = useState(null);
 
   // Add loading state for transaction id checking
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -345,7 +969,7 @@ export default function Registration() {
         total: 1,
       },
       paymentInfo: {
-        totalAmount: ADULT_FEE,
+        totalAmount: isCurrentStudent ? STUDENT_FEE : ADULT_FEE,
         mobileBankingName: "",
         status: 1,
         transactionId: "",
@@ -373,6 +997,7 @@ export default function Registration() {
   // Watch for changes in adult and child numbers
   const adultCount = form.watch("numberOfParticipantInfo.adult");
   const childCount = form.watch("numberOfParticipantInfo.child") || 0;
+  const paymentMethod = form.watch("paymentInfo.mobileBankingName");
 
   useEffect(() => {
     // Reset form errors when switching status
@@ -397,6 +1022,9 @@ export default function Registration() {
         paymentInfo: {
           ...form.getValues().paymentInfo,
           totalAmount: STUDENT_FEE,
+          mobileBankingName: "",
+          status: 1,
+          transactionId: "",
         },
         profilePictureInfo: {
           image: "",
@@ -424,18 +1052,13 @@ export default function Registration() {
         : registrationApi.submitAlumniForm(values));
 
       if (response.success) {
-        toast({
-          title: "Registration Complete",
-          description:
-            "Your data has been submitted. We will notify you once it's been verified. Thank You.",
-        });
-
+        // toast({
+        //   title: "Registration Complete",
+        //   description: "Your registration has been submitted successfully.",
+        // });
+        setRegistrationResponse(response.data);
         form.reset();
-
-        // Redirect to home page after 3 seconds
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
+        setShowSuccess(true);
       } else {
         toast({
           variant: "destructive",
@@ -460,8 +1083,16 @@ export default function Registration() {
 
   return (
     <div className="relative min-h-screen mt-20">
+      {/* Show success modal when registration is complete */}
+      {showSuccess && (
+        <RegistrationSuccess
+          onClose={() => navigate("/")}
+          registrationData={registrationResponse}
+        />
+      )}
       {/* Academis Status */}
-      <div className="max-w-sm mx-auto mb-8 px-8 sm:px-4">
+      <div className="container mx-auto px-8 sm:px-4 max-w-4xl">
+        <RegistrationGuidelines />
         <h2 className="text-lg sm:text-xl font-semibold text-center mb-4">
           Select Your Academic Status
         </h2>
@@ -713,7 +1344,7 @@ export default function Registration() {
                   />
                 </div>
 
-                {/* Input Passing Year */}
+                {/* Input Year of Certificate Awarded */}
                 {!isCurrentStudent && (
                   <div className="col-span-6">
                     <FormField
@@ -722,7 +1353,7 @@ export default function Registration() {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>
-                            Passing Year
+                            Year of Certificate Awarded
                             <RequiredField value={field.value} />
                           </FormLabel>
                           <Popover>
@@ -741,7 +1372,7 @@ export default function Registration() {
                                         (passingYear) =>
                                           passingYear.value === field.value
                                       )?.label
-                                    : "Select passing year"}
+                                    : "Select year"}
                                   <ChevronsUpDown className=" h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                               </FormControl>
@@ -812,9 +1443,9 @@ export default function Registration() {
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder=""
+                            placeholder="01XXXXXXXXX"
                             type="text"
-                            pattern="[0-9]+"
+                            maxLength={11}
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
                                 e.preventDefault();
@@ -857,7 +1488,7 @@ export default function Registration() {
                 name="contactInfo.currentAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Current Address</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder=""
@@ -878,6 +1509,11 @@ export default function Registration() {
               <h2 className="text-xl font-semibold border-b pb-2">
                 Professional Information
               </h2>
+              <FormDescription className="text-sm text-muted-foreground">
+                Feel free to share your professional journey with us. This helps
+                build our alumni network and creates opportunities for
+                mentorship and collaboration.
+              </FormDescription>
               <div className="space-y-6">
                 {/* Input Current Designation */}
                 <FormField
@@ -1188,7 +1824,11 @@ export default function Registration() {
                       name="numberOfParticipantInfo.child"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Child</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <FormLabel>Child </FormLabel>
+                            <FormDescription>(Above 5 years)</FormDescription>
+                          </div>
+
                           <FormControl>
                             <Input
                               placeholder=""
@@ -1212,7 +1852,7 @@ export default function Registration() {
               Payment Information
             </h2>
             <div className="space-y-6">
-              {/* Total Amount  */}
+              {/* Total Amount */}
               <FormField
                 control={form.control}
                 name="paymentInfo.totalAmount"
@@ -1227,168 +1867,183 @@ export default function Registration() {
                         value={field.value || 0}
                       />
                     </FormControl>
-
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* Payment Method  */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="paymentInfo.mobileBankingName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Payment Method
-                          <RequiredField value={field.value} />
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Bkash">Bkash</SelectItem>
-                            <SelectItem value="Rocket">Rocket</SelectItem>
-                            <SelectItem value="Nagad">Nagad</SelectItem>
-                          </SelectContent>
-                        </Select>
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {isCurrentStudent ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 p-4">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    Please submit the registration fee (hand cash) to your
+                    respective batch&apos;s Class Representative after competing
+                    the registration.
+                  </p>
                 </div>
+              ) : (
+                <div className="grid grid-cols-12 gap-4">
+                  {/* Payment Method */}
+                  <div className="col-span-6">
+                    <FormField
+                      control={form.control}
+                      name="paymentInfo.mobileBankingName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Payment Method
+                            <RequiredField value={field.value} />
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="bankTransfer">
+                                Bank Transfer
+                              </SelectItem>
+                              <SelectItem value="cashDeposit">
+                                Cash Deposit
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Transation Id */}
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name="paymentInfo.transactionId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Transaction Id
-                          <RequiredField value={field.value} />
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="" type="text" {...field} />
-                        </FormControl>
-
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Transaction Id */}
+                  {paymentMethod && (
+                    <div className="col-span-6">
+                      <FormField
+                        control={form.control}
+                        name="paymentInfo.transactionId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              {paymentMethod === "bankTransfer"
+                                ? "Sender's Account Number"
+                                : "Reference Phone Number"}
+                              <RequiredField value={field.value} />
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="" type="text" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Profile Picture */}
-          {!isCurrentStudent && (
-            <div className="space-y-4 pt-10">
-              <h2 className="text-2xl font-semibold border-b pb-2"></h2>
-              <FormField
-                control={form.control}
-                name="profilePictureInfo.image"
-                render={({ field: { value, onChange, ...field } }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Profile Picture
-                      <span
-                        className="text-red-500 cursor-help"
-                        title="This is a mandatory field"
+          <div className="space-y-4 pt-10">
+            <h2 className="text-2xl font-semibold border-b pb-2"></h2>
+            <FormField
+              control={form.control}
+              name="profilePictureInfo.image"
+              render={({ field: { value, onChange, ...field } }) => (
+                <FormItem>
+                  <FormLabel>
+                    {isCurrentStudent
+                      ? "Student's Profile Picture"
+                      : "Alumnus Profile Picture"}
+                    <span
+                      className="text-red-500 cursor-help"
+                      title="This is a mandatory field"
+                    >
+                      {" "}
+                      *
+                    </span>
+                  </FormLabel>
+                  <FormControl>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div
+                        className={cn(
+                          "border-2 border-dashed rounded-lg p-4",
+                          "w-auto h-auto sm:w-[200px] sm:h-[150px] md:w-[200px] md:h-[150px]",
+                          "flex flex-col items-center justify-center gap-2",
+                          "cursor-pointer hover:border-primary transition-colors",
+                          value && "border-primary"
+                        )}
+                        onClick={() =>
+                          document.getElementById("picture-upload").click()
+                        }
                       >
-                        {" "}
-                        *
-                      </span>
-                    </FormLabel>
-                    <FormControl>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <div
-                          className={cn(
-                            "border-2 border-dashed rounded-lg p-4",
-                            "w-auto h-auto sm:w-[200px] sm:h-[150px] md:w-[200px] md:h-[150px]",
-                            "flex flex-col items-center justify-center gap-2",
-                            "cursor-pointer hover:border-primary transition-colors",
-                            value && "border-primary"
-                          )}
-                          onClick={() =>
-                            document.getElementById("picture-upload").click()
-                          }
-                        >
-                          {value ? (
-                            <div className="relative w-full h-full">
-                              <img
-                                src={
-                                  typeof value === "string"
-                                    ? value
-                                    : URL.createObjectURL(value)
-                                }
-                                alt="Profile preview"
-                                className="w-full h-full object-cover rounded-lg"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute -top-2 -right-2 h-6 w-6"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onChange(null);
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-                              <p className="text-xs sm:text-sm text-muted-foreground text-center">
-                                Click to upload
-                              </p>
-                            </>
-                          )}
-                        </div>
-                        <input
-                          id="picture-upload"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              if (validateFile(file)) {
-                                onChange(file);
-                              } else {
-                                e.target.value = ''; // Clear the input
+                        {value ? (
+                          <div className="relative w-full h-full">
+                            <img
+                              src={
+                                typeof value === "string"
+                                  ? value
+                                  : URL.createObjectURL(value)
                               }
-                            }
-                          }}
-                          {...field}
-                        />
+                              alt="Profile preview"
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onChange(null);
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+                            <p className="text-xs sm:text-sm text-muted-foreground text-center">
+                              Click to upload
+                            </p>
+                          </>
+                        )}
                       </div>
-                    </FormControl>
-                    <FormDescription className="text-xs sm:text-sm text-muted-foreground">
-                      Upload a recent formal passport size photo (max 2MB).
-                      Photo should be:
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Clear, front-facing with formal attire</li>
-                        <li>Latest photo preferable</li>
-                      </ul>
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
+                      <input
+                        id="picture-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (validateFile(file)) {
+                              onChange(file);
+                            } else {
+                              e.target.value = ""; // Clear the input
+                            }
+                          }
+                        }}
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription className="text-xs sm:text-sm text-muted-foreground">
+                    Upload a recent formal passport size photo (max 2MB). Photo
+                    should be:
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Clear, front-facing with formal attire</li>
+                      <li>Latest photo preferable</li>
+                    </ul>
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
           {/* Update submit button for transaction id checking */}
           <Button
