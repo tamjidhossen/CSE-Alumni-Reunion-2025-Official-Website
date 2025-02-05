@@ -11,7 +11,7 @@ const alumniSchema = new mongoose.Schema({
     contactInfo: {
         mobile: { type: String, required: true },
         email: { type: String, required: true },
-        currentAddress: { type: String, required: true }
+        currentAddress: { type: String }
     },
     professionalInfo: {
         currentDesignation: { type: String, default: '' },
