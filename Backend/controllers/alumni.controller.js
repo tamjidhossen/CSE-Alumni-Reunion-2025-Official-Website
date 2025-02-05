@@ -27,7 +27,7 @@ const addAlumni = async (req, res) => {
         const childCount = data.numberOfParticipantInfo.child || 0;
         const adultCount = data.numberOfParticipantInfo.adult || 0;
         const totalFee = data.paymentInfo.totalAmount;
-        const calculatedFee = (childCount * childFee) + (adultCount * adultFee);
+        const calculatedFee = (childCount * childFee) + (adultCount * adultFee) + 1000;
 
         if (calculatedFee !== totalFee) {
             return res.status(400).json({
@@ -56,12 +56,13 @@ const addAlumni = async (req, res) => {
 
         // Handle image saving after database insertion
         if (req.file) {
-            const uploadDir = path.join(__dirname, '../../../uploads/images');
+            const uploadDir = path.join(__dirname, '../uploads/images');
 
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
-            const filePath = `${uploadDir}/${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            const filename = `${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            const filePath = path.join(uploadDir, filename);
             fs.writeFile(filePath, req.file.buffer, async (err) => {
                 if (err) {
                     // Rollback database entry if file saving fails
@@ -70,7 +71,7 @@ const addAlumni = async (req, res) => {
                 }
 
                 // Update the alumni record with the image path
-                savedAlumni.profilePictureInfo.image = filePath;
+                savedAlumni.profilePictureInfo.image = filename;
                 await savedAlumni.save();
                 emailService.sendRegistrationMail(data.contactInfo.email, "Successfully Registered!", data);
                 res.status(201).json({

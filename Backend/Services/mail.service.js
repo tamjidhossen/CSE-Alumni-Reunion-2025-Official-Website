@@ -36,7 +36,7 @@ const sendRegistrationMail = async (to, subject, userData) => {
           <p>We look forward to staying connected and sharing updates with you.</p>
         </div>
         <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
-          <p>If you have any questions, feel free to contact us at <a href="mailto:support@example.com">support@example.com</a>.</p>
+          <p>If you have any questions, feel free to contact us at <a href="mailto:alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a>.</p>
           <p>Best regards,</p>
           <p><strong>Your Alumni Team</strong></p>
         </div>
@@ -52,7 +52,6 @@ const sendRegistrationMail = async (to, subject, userData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.response);
     return info;
   } catch (error) {
     console.error('Error sending email:', error);
@@ -78,18 +77,11 @@ const sendStudentConfirmationMail = async (to, subject, userData) => {
         </ul>
 
         <p>Through this program, you will get exclusive updates on alumni events, networking opportunities, and career resources. Stay connected with us as we build a strong alumni community.</p>
-        
-        <p><strong>Next Steps:</strong></p>
-        <ul>
-          <li>Join our <a href="https://example.com/alumni-group" style="color: #0047AB; text-decoration: none;">official alumni group</a>.</li>
-          <li>Follow us on social media for updates.</li>
-          <li>Look out for our upcoming events and reunions!</li>
-        </ul>
 
         <p>We look forward to staying in touch and celebrating your journey with JKKNIU's CSE alumni network.</p>
       </div>
       <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
-        <p>If you have any questions, feel free to reach out at <a href="mailto:support@example.com">support@example.com</a>.</p>
+        <p>If you have any questions, feel free to reach out at <a href="mailto:alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a>.</p>
         <p>Best regards,</p>
         <p><strong>CSE Alumni Community Team</strong></p>
       </div>
@@ -105,7 +97,6 @@ const sendStudentConfirmationMail = async (to, subject, userData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Confirmation email sent:', info.response);
     return info;
   } catch (error) {
     console.error('Error sending email:', error);
@@ -136,8 +127,8 @@ const sendPaymentRejectionMail = async (to, subject, userData) => {
         
         <p><strong>Contact Details:</strong></p>
         <ul>
-          <li><strong>Phone:</strong> +8801XXXXXXXXX</li>
-          <li><strong>Email:</strong> <a href="mailto:support@example.com">support@example.com</a></li>
+          <li><strong>Phone:</strong> +8801732155234</li>
+          <li><strong>Email:</strong> <a href="mailto:alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a></li>
         </ul>
 
         <p>We apologize for any inconvenience and appreciate your understanding.</p>
@@ -159,7 +150,6 @@ const sendPaymentRejectionMail = async (to, subject, userData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Payment rejection email sent:', info.response);
     return info;
   } catch (error) {
     console.error('Error sending email:', error);
@@ -182,13 +172,13 @@ const sendPaymentConfirmationMail = async (to, subject, paymentData) => {
               <li><strong>Name:</strong> ${paymentData.personalInfo.name}</li>
               <li><strong>Email:</strong> ${paymentData.contactInfo.email}</li>
               <li><strong>Amount:</strong> ৳ ${paymentData.paymentInfo.totalAmount} BDT</li>
-              <li><strong>Transaction ID:</strong> ${paymentData.paymentInfo.transactionId}</li>
+              <li><strong>Bank Account / Ref :</strong> ${paymentData.paymentInfo.transactionId}</li>
               <li><strong>Date:</strong> ${paymentData.updatedAt}</li>
             </ul>
             <p>If you have any questions about your payment, feel free to contact us.</p>
           </div>
           <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
-            <p>If you need assistance, contact us at <a href="mailto:support@example.com">support@example.com</a>.</p>
+            <p>If you need assistance, contact us at <a href="alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a>.</p>
             <p>Best regards,</p>
             <p><strong>Your Alumni Team</strong></p>
           </div>
@@ -204,7 +194,6 @@ const sendPaymentConfirmationMail = async (to, subject, paymentData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Payment confirmation email sent:', info.response);
     return info;
   } catch (error) {
     console.error('Error sending payment confirmation email:', error);
