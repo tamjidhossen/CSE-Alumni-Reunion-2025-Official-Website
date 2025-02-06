@@ -7,10 +7,12 @@ import Navbar from "./components/Header/Navbar/Navbar";
 import { Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import ScrollToTop from "./components/ScrollToTop";
 
 function Layout() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <ScrollToTop />
       {/* Add the light beam and grid effects */}
       <div className="fixed left-0 top-0 -z-10 h-full w-full">
         <div className="absolute top-0 z-[-2] h-screen w-screen bg-[radial-gradient(ellipse_80%_80%_at_50%_-40%,rgba(255,255,255,0.15),rgba(255,255,255,0))]" />
