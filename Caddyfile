@@ -1,13 +1,4 @@
 csealumni.jkkniu.edu.bd {
-    # Rate limiting configuration
-    rate_limit * {
-        zone ddos_protection {
-            key {remote_host}
-            events 100
-            window 10s
-        }
-    }
-
     # API requests handler
     handle_path /api/* {
         reverse_proxy backend:4000
@@ -20,14 +11,6 @@ csealumni.jkkniu.edu.bd {
     }
 
     handle_path /admin/api/* {
-        # Additional rate limiting for admin endpoints
-        rate_limit {
-            zone admin_protection {
-                key {remote_host}
-                events 30
-                window 60s
-            }
-        }
         reverse_proxy backend:4000 {
             uri strip_prefix /admin
         }
