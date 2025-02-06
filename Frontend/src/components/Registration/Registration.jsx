@@ -1053,6 +1053,7 @@ export default function Registration() {
   const adultCount = form.watch("numberOfParticipantInfo.adult");
   const childCount = form.watch("numberOfParticipantInfo.child") || 0;
   const paymentMethod = form.watch("paymentInfo.mobileBankingName");
+  const selectedSession = form.watch("personalInfo.session");
 
   useEffect(() => {
     // Reset form errors when switching status
@@ -1086,17 +1087,32 @@ export default function Registration() {
         },
       });
     } else {
+      if (!selectedSession) {
+        // Reset values when no session is selected
+        form.setValue("numberOfParticipantInfo.adult", 1);
+        form.setValue("numberOfParticipantInfo.child", 0);
+        form.setValue("numberOfParticipantInfo.total", 1);
+        form.setValue("paymentInfo.totalAmount", "");
+        return;
+      }
       // Handle alumni calculations
+      let totalAmount;
       const numAdults = parseInt(adultCount) || 0;
       const numChildren = parseInt(childCount) || 0;
-      const totalAmount =
-        numAdults * ADULT_FEE + numChildren * CHILD_FEE + 1000;
+
+      // Special rate for 2018-2019 and 2019-2020 batches
+      if (selectedSession === "2018-2019" || selectedSession === "2019-2020") {
+        totalAmount = numAdults * 1000 + numChildren * CHILD_FEE;
+      } else {
+        totalAmount = numAdults * 1000 + numChildren * CHILD_FEE + 1000;
+      }
+
       const totalCount = numAdults + numChildren;
 
       form.setValue("numberOfParticipantInfo.total", totalCount);
       form.setValue("paymentInfo.totalAmount", totalAmount);
     }
-  }, [isCurrentStudent, adultCount, childCount, form]);
+  }, [isCurrentStudent, adultCount, childCount, form, selectedSession]);
 
   async function onSubmit(values) {
     try {
@@ -1897,8 +1913,8 @@ export default function Registration() {
                       control={form.control}
                       name="numberOfParticipantInfo.adult"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
+                        <FormItem className="space-y-2">
+                          <FormLabel className="flex items-center h-6">
                             Adult
                             <RequiredField value={field.value} />
                           </FormLabel>
@@ -1907,6 +1923,7 @@ export default function Registration() {
                               placeholder=""
                               type="number"
                               min={1}
+                              disabled={!selectedSession}
                               {...field}
                             />
                           </FormControl>
@@ -1922,17 +1939,19 @@ export default function Registration() {
                       control={form.control}
                       name="numberOfParticipantInfo.child"
                       render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center gap-2">
-                            <FormLabel>Child </FormLabel>
-                            <FormDescription>(Above 5 years)</FormDescription>
-                          </div>
-
+                        <FormItem className="space-y-2">
+                          <FormLabel className="flex items-center h-6">
+                            Child
+                            <FormDescription className="ml-2">
+                              (Above 5 years)
+                            </FormDescription>
+                          </FormLabel>
                           <FormControl>
                             <Input
                               placeholder=""
                               type="number"
                               min={0}
+                              disabled={!selectedSession}
                               {...field}
                             />
                           </FormControl>
@@ -1960,10 +1979,12 @@ export default function Registration() {
                     <FormLabel>Total Amount</FormLabel>
                     <FormControl>
                       <NumberInput
-                        placeholder=""
+                        placeholder={
+                          !selectedSession ? "Select session first" : ""
+                        }
                         disabled
                         {...field}
-                        value={field.value || 0}
+                        value={!selectedSession ? "" : field.value || 0}
                       />
                     </FormControl>
                     <FormMessage />
