@@ -1,6 +1,6 @@
 csealumni.jkkniu.edu.bd {
     # API requests handler
-    handle_path /api/* {
+    handle /api/* {
         reverse_proxy backend:4000
     }
 
