@@ -807,10 +807,6 @@ export default function Registration() {
 
   const sessions = [
     {
-      label: "2024-2025",
-      value: "2024-2025",
-    },
-    {
       label: "2023-2024",
       value: "2023-2024",
     },
@@ -884,18 +880,6 @@ export default function Registration() {
     },
   ];
   const passingYears = [
-    {
-      label: "2028",
-      value: "2028",
-    },
-    {
-      label: "2027",
-      value: "2027",
-    },
-    {
-      label: "2026",
-      value: "2026",
-    },
     {
       label: "2025",
       value: "2025",
@@ -1905,6 +1889,13 @@ export default function Registration() {
               <h2 className="text-xl font-semibold border-b pb-2">
                 Participant Information
               </h2>
+              {!selectedSession && (
+                <div className="mb-4">
+                  <h4 className="text-red-500 text-sm font-medium">
+                    Please select your session before proceeding
+                  </h4>
+                </div>
+              )}
               <div className="space-y-6">
                 {/* Adult Participants  */}
                 <div className="grid grid-cols-12 gap-4">
