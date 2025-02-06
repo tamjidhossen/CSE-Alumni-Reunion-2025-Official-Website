@@ -16,7 +16,6 @@ import {
   View,
   StyleSheet,
   PDFDownloadLink,
-  Image,
 } from "@react-pdf/renderer";
 import {
   GraduationCap,
@@ -81,17 +80,29 @@ import {
   CHILD_FEE,
   STUDENT_FEE,
   MAX_FILE_SIZE,
-  API_URL,
 } from "@/lib/authConfig";
 
 const formSchema = (isCurrentStudent) =>
   z.object({
     personalInfo: z.object({
-      name: z.string().min(1, "Name is required"),
-      roll: z.coerce.number().min(1, "Roll is required"),
+      name: z
+        .string()
+        .min(1, "Name is required")
+        .max(100, "Name must not exceed 100 characters"),
+      roll: z.coerce
+        .number()
+        .min(1, "Roll is required")
+        .refine(
+          (val) => val.toString().length <= 12,
+          "Roll number must not exceed 12 digits"
+        ),
       registrationNo: z.coerce
         .number()
-        .min(1, "Registration number is required"),
+        .min(1, "Registration number is required")
+        .refine(
+          (val) => val.toString().length <= 6,
+          "Registration number must not exceed 6 digits"
+        ),
       session: z.string().min(1, "Session is required"),
       passingYear: isCurrentStudent
         ? z.string().optional()
@@ -109,14 +120,33 @@ const formSchema = (isCurrentStudent) =>
           (value) => value.length === 11,
           "Mobile number must be exactly 11 digits"
         ),
-      email: z.string().email("Invalid email address"),
-      currentAddress: z.string().optional(),
+      email: z
+        .string()
+        .email("Invalid email address")
+        .max(100, "Email must not exceed 100 characters"),
+      currentAddress: z
+        .string()
+        .optional()
+        .transform((x) => x || "")
+        .pipe(z.string().max(300, "Address must not exceed 300 characters")),
     }),
     professionalInfo: isCurrentStudent
       ? z.object({}).optional()
       : z.object({
-          currentDesignation: z.string().optional(),
-          currentOrganization: z.string().optional(),
+          currentDesignation: z
+            .string()
+            .optional()
+            .transform((x) => x || "")
+            .pipe(
+              z.string().max(100, "Designation must not exceed 100 characters")
+            ),
+          currentOrganization: z
+            .string()
+            .optional()
+            .transform((x) => x || "")
+            .pipe(
+              z.string().max(100, "Organization must not exceed 100 characters")
+            ),
           from: z.date().optional(),
           to: z.string().optional(),
         }),
@@ -125,8 +155,24 @@ const formSchema = (isCurrentStudent) =>
       : z
           .array(
             z.object({
-              designation: z.string().optional(),
-              organization: z.string().optional(),
+              designation: z
+                .string()
+                .optional()
+                .transform((x) => x || "")
+                .pipe(
+                  z
+                    .string()
+                    .max(100, "Designation must not exceed 100 characters")
+                ),
+              organization: z
+                .string()
+                .optional()
+                .transform((x) => x || "")
+                .pipe(
+                  z
+                    .string()
+                    .max(100, "Organization must not exceed 100 characters")
+                ),
               from: z.date().optional(),
               to: z.date().optional(),
             })
@@ -148,13 +194,20 @@ const formSchema = (isCurrentStudent) =>
           totalAmount: z.coerce.number(),
           mobileBankingName: z.string().optional(),
           status: z.coerce.number().default(1),
-          transactionId: z.string().optional(),
+          transactionId: z
+            .string()
+            .optional()
+            .transform((x) => x || "")
+            .pipe(z.string().max(50, "Must not exceed 50 characters")),
         })
       : z.object({
           totalAmount: z.coerce.number(),
           mobileBankingName: z.string().min(1, "Payment method is required"),
           status: z.coerce.number().default(1),
-          transactionId: z.string().min(1, "Transaction ID is required"),
+          transactionId: z
+            .string()
+            .min(1, "This is required")
+            .max(50, "Must not exceed 50 characters"),
         }),
     profilePictureInfo: z.object({
       image: z.instanceof(File, { message: "Profile picture is required" }),
@@ -746,6 +799,8 @@ export default function Registration() {
   const [isCurrentStudent, setIsCurrentStudent] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [registrationResponse, setRegistrationResponse] = useState(null);
+  const [openSession, setOpenSession] = useState(false);
+  const [openPassingYear, setOpenPassingYear] = useState(false);
 
   // Add loading state for transaction id checking
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1196,6 +1251,7 @@ export default function Registration() {
                       <Input
                         placeholder=""
                         type="text"
+                        maxLength={100}
                         pattern="[A-Za-z\s.]+"
                         onKeyPress={(e) => {
                           if (!/[A-Za-z\s.]/.test(e.key)) {
@@ -1225,6 +1281,7 @@ export default function Registration() {
                           <NumberInput
                             placeholder=""
                             type="text"
+                            maxLength={12}
                             pattern="[0-9]+"
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
@@ -1256,6 +1313,7 @@ export default function Registration() {
                           <NumberInput
                             placeholder=""
                             type="text"
+                            maxLength={6}
                             pattern="[0-9]+"
                             onKeyPress={(e) => {
                               if (!/[0-9]/.test(e.key)) {
@@ -1284,7 +1342,10 @@ export default function Registration() {
                           Session
                           <RequiredField value={field.value} />
                         </FormLabel>
-                        <Popover>
+                        <Popover
+                          open={openSession}
+                          onOpenChange={setOpenSession}
+                        >
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
@@ -1319,6 +1380,7 @@ export default function Registration() {
                                           "personalInfo.session",
                                           session.value
                                         );
+                                        setOpenSession(false);
                                       }}
                                     >
                                       <Check
@@ -1356,7 +1418,7 @@ export default function Registration() {
                             Year of Certificate Awarded
                             <RequiredField value={field.value} />
                           </FormLabel>
-                          <Popover>
+                          <Popover open={openPassingYear} onOpenChange={setOpenPassingYear}>
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
@@ -1394,6 +1456,7 @@ export default function Registration() {
                                             "personalInfo.passingYear",
                                             passingYear.value
                                           );
+                                          setOpenPassingYear(false);
                                         }}
                                       >
                                         <Check
@@ -1473,7 +1536,12 @@ export default function Registration() {
                           <RequiredField value={field.value} />
                         </FormLabel>
                         <FormControl>
-                          <Input placeholder="" type="email" {...field} />
+                          <Input
+                            placeholder=""
+                            maxLength={50}
+                            type="email"
+                            {...field}
+                          />
                         </FormControl>
 
                         <FormMessage />
@@ -1493,6 +1561,7 @@ export default function Registration() {
                       <Textarea
                         placeholder=""
                         className="resize-none"
+                        maxLength={300}
                         {...field}
                       />
                     </FormControl>
@@ -1523,7 +1592,12 @@ export default function Registration() {
                     <FormItem>
                       <FormLabel>Current Designation</FormLabel>
                       <FormControl>
-                        <Input placeholder="" type="text" {...field} />
+                        <Input
+                          placeholder=""
+                          maxLength={100}
+                          type="text"
+                          {...field}
+                        />
                       </FormControl>
 
                       <FormMessage />
@@ -1538,7 +1612,12 @@ export default function Registration() {
                     <FormItem>
                       <FormLabel>Current Organization</FormLabel>
                       <FormControl>
-                        <Input placeholder="" type="text" {...field} />
+                        <Input
+                          placeholder=""
+                          maxLength={100}
+                          type="text"
+                          {...field}
+                        />
                       </FormControl>
 
                       <FormMessage />
@@ -1660,7 +1739,12 @@ export default function Registration() {
                             <FormItem>
                               <FormLabel>Designation</FormLabel>
                               <FormControl>
-                                <Input placeholder="" type="text" {...field} />
+                                <Input
+                                  placeholder=""
+                                  maxLength={100}
+                                  type="text"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1675,7 +1759,12 @@ export default function Registration() {
                             <FormItem>
                               <FormLabel>Organization</FormLabel>
                               <FormControl>
-                                <Input placeholder="" type="text" {...field} />
+                                <Input
+                                  placeholder=""
+                                  maxLength={100}
+                                  type="text"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -1932,7 +2021,12 @@ export default function Registration() {
                               <RequiredField value={field.value} />
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="" type="text" {...field} />
+                              <Input
+                                placeholder=""
+                                maxLength={50}
+                                type="text"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
