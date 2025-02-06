@@ -4,9 +4,9 @@
         reverse_proxy backend:4000
     }
 
-    # Add this block to handle uploads
+    # Serve images from /app/uploads/images
     handle_path /uploads/* {
-        root * /app
+        root * /app/uploads/images
         file_server
     }
 

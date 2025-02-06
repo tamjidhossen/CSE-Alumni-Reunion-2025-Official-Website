@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }))
 // app.use('/uploads/images', express.static(path.join(__dirname, '../../local-uploads')));
 
 const uploadPath = path.join(__dirname, 'uploads/images'); //for dockers local?
-console.log('Upload path:', uploadPath);
+console.log('Upload path.....:', uploadPath);
 app.use('/uploads/images', express.static(uploadPath));
 
 app.use('/api/registration', registrationRoutes);

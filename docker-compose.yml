@@ -53,6 +53,7 @@ services:
       - frontend_build:/srv
       - caddy_data:/data
       - caddy_config:/config
+      - ../uploads/images:/app/uploads/images
     networks:
       - reunion-test-prod-network
 
