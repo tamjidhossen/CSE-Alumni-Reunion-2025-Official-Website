@@ -5,7 +5,7 @@ csealumni.jkkniu.edu.bd {
     }
 
     # Serve images from /app/uploads/images
-    handle /uploads/* {
+    handle_path /uploads/* {
         root * /app/uploads/images
         file_server
     }
