@@ -28,8 +28,15 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file: ./Frontend/.env
+    args:
+      - VITE_API_URL=http://103.159.2.113
+      - VITE_ADULT_FEE=1000
+      - VITE_CHILD_FEE=500
+      - VITE_STUDENT_FEE=500
+      - VITE_MAX_FILE_SIZE=2097152
+      - VITE_JWT_TOKEN_KEY=adminToken
     volumes:
-      - frontend_build:/app/dist
+      - frontend_build:/srv
     networks:
       - reunion-test-prod-network
     depends_on:
@@ -52,6 +59,7 @@ services:
 volumes:
   mongo_data:
   uploaded_images:
+  frontend_build:
   caddy_data:
   caddy_config:
 

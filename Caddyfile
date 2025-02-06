@@ -1,36 +1,36 @@
 :80 {
-    # Rate limiting
-    @api {
-        path /api/*
-    }
-    handle @api {
-        rate_limit {
-            zone dynamic_zone {
-                key {remote_ip}
-                events 100
-                window 60s
-            }
-        }
+    # API requests handler - handle both /api/* and /admin/api/* paths
+    handle_path /api/* {
         reverse_proxy backend:4000
     }
 
-    # Static file serving
-    handle /* {
-        root * /srv
-        try_files {path} /index.html
+    # Add this block to handle uploads
+    handle_path /uploads/* {
+        root * /app
         file_server
     }
 
-    # Security headers
+    handle_path /admin/api/* {
+        reverse_proxy backend:4000 {
+            uri strip_prefix /admin
+        }
+    }
+
+    # Static files handler
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+        encode gzip
+    }
+
+    # Security headers with updated CSP
     header {
         Strict-Transport-Security "max-age=31536000;"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "strict-origin-when-cross-origin"
         X-XSS-Protection "1; mode=block"
         X-Frame-Options "DENY"
-        Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; connect-src 'self';"
+        Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' http://103.159.2.113;"
     }
-
-    # Enable compression
-    encode gzip
 }
