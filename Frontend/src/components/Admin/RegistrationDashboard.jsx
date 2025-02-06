@@ -727,9 +727,7 @@ const RegistrationTable = ({
                               <div className="flex flex-col items-center text-center">
                                 <Avatar className="h-24 w-24 border-2 mb-4">
                                   <AvatarImage
-                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image
-                                      .split("/")
-                                      .pop()}`}
+                                    src={`${API_URL}/uploads/images/${reg.profilePictureInfo.image}`}
                                   />
                                   <AvatarFallback className="text-xl">
                                     {reg.personalInfo.name
