@@ -1,5 +1,14 @@
-:80 {
-    # API requests handler - handle both /api/* and /admin/api/* paths
+csealumni.jkkniu.edu.bd {
+    # Rate limiting configuration
+    rate_limit * {
+        zone ddos_protection {
+            key {remote_host}
+            events 100
+            window 10s
+        }
+    }
+
+    # API requests handler
     handle_path /api/* {
         reverse_proxy backend:4000
     }
@@ -11,6 +20,14 @@
     }
 
     handle_path /admin/api/* {
+        # Additional rate limiting for admin endpoints
+        rate_limit {
+            zone admin_protection {
+                key {remote_host}
+                events 30
+                window 60s
+            }
+        }
         reverse_proxy backend:4000 {
             uri strip_prefix /admin
         }
@@ -31,6 +48,6 @@
         Referrer-Policy "strict-origin-when-cross-origin"
         X-XSS-Protection "1; mode=block"
         X-Frame-Options "DENY"
-        Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' http://103.159.2.113;"
+        Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' https://csealumni.jkkniu.edu.bd;"
     }
 }

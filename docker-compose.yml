@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     env_file: ./Frontend/.env
     args:
-      - VITE_API_URL=http://103.159.2.113
+      - VITE_API_URL=https://csealumni.jkkniu.edu.bd
       - VITE_ADULT_FEE=1000
       - VITE_CHILD_FEE=500
       - VITE_STUDENT_FEE=500
