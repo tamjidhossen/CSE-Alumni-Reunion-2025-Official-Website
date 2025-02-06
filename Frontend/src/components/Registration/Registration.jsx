@@ -1089,7 +1089,7 @@ export default function Registration() {
       // Handle alumni calculations
       const numAdults = parseInt(adultCount) || 0;
       const numChildren = parseInt(childCount) || 0;
-      const totalAmount = numAdults * ADULT_FEE + numChildren * CHILD_FEE;
+      const totalAmount = numAdults * ADULT_FEE + numChildren * CHILD_FEE + 1000;
       const totalCount = numAdults + numChildren;
 
       form.setValue("numberOfParticipantInfo.total", totalCount);
