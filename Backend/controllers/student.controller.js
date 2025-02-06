@@ -108,7 +108,8 @@ const updateStudent = async (req, res) => {
         // Handle image replacement
         if (req.file) {
             const uploadDir = path.join(__dirname, '../uploads/images');
-            const newImagePath = `${uploadDir}/${updateData.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            const newImagename = `${updateData.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+            const newImagePath = path.join(uploadDir, newImagename);
 
             // Delete the old image if it exists
             if (student.profilePictureInfo.image) {
@@ -121,7 +122,7 @@ const updateStudent = async (req, res) => {
 
             // Save the new image
             fs.writeFileSync(newImagePath, req.file.buffer);
-            updateData.profilePictureInfo = { image: newImagePath };
+            updateData.profilePictureInfo = { image: newImagename };
         }
 
         // Update the student record
