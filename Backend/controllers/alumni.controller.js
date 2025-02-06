@@ -27,7 +27,7 @@ const addAlumni = async (req, res) => {
         const childCount = data.numberOfParticipantInfo.child || 0;
         const adultCount = data.numberOfParticipantInfo.adult || 0;
         const totalFee = data.paymentInfo.totalAmount;
-        const calculatedFee = (childCount * childFee) + (adultCount * adultFee) + 1000;
+        let calculatedFee = (childCount * childFee) + (adultCount * adultFee) + 1000;
         if (data.personalInfo.session === "2019-2020" || data.personalInfo.session === "2018-2019") {
             calculatedFee = 1000 * adultCount + childCount * 500;
         }
