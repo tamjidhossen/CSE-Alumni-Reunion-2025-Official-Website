@@ -38,7 +38,7 @@ const sendRegistrationMail = async (to, subject, userData) => {
         <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
           <p>If you have any questions, feel free to contact us at <a href="mailto:alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a>.</p>
           <p>Best regards,</p>
-          <p><strong>Your Alumni Team</strong></p>
+          <p><strong>CSE Alumni Community Team OF JKKNIU</strong></p>
         </div>
       </div>
     `;
@@ -63,7 +63,7 @@ const sendStudentConfirmationMail = async (to, subject, userData) => {
     const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
       <div style="background-color: #0047AB; color: white; padding: 20px; text-align: center;">
-        <h1>Welcome to the CSE Alumni Program!</h1>
+        <h1>Welcome to the CSE Alumni Program 2025!</h1>
       </div>
       <div style="padding: 20px;">
         <h2>Dear ${userData.personalInfo.name},</h2>
@@ -83,13 +83,13 @@ const sendStudentConfirmationMail = async (to, subject, userData) => {
       <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
         <p>If you have any questions, feel free to reach out at <a href="mailto:alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a>.</p>
         <p>Best regards,</p>
-        <p><strong>CSE Alumni Community Team</strong></p>
+        <p><strong>CSE Alumni Community Team OF JKKNIU</strong></p>
       </div>
     </div>
   `;
 
     const mailOptions = {
-      from: `"CSE ALUMNI COMMUNITY OF JKKNIU" <${process.env.EMAIL_USERNAME}>`, // Sender's email
+      from: `"CSE Alumni Community Team OF JKKNIU" <${process.env.EMAIL_USERNAME}>`, // Sender's email
       to, // Recipient's email
       subject, // Email subject
       text: `Dear ${userData.personalInfo.name}, your registration for the CSE Alumni Program is confirmed! Stay tuned for updates.`, // Plain text fallback
@@ -113,7 +113,7 @@ const sendPaymentRejectionMail = async (to, subject, userData) => {
       </div>
       <div style="padding: 20px;">
         <h2>Dear ${userData.personalInfo.name},</h2>
-        <p>We regret to inform you that your payment for the CSE Alumni Program has been **rejected due to unavoidable reasons**.</p>
+        <p>We regret to inform you that your payment for the CSE Alumni Program has been rejected due to unavoidable reasons.</p>
         
         <p><strong>Payment Details:</strong></p>
         <ul>
@@ -136,7 +136,7 @@ const sendPaymentRejectionMail = async (to, subject, userData) => {
       <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
         <p>For further assistance, please do not hesitate to reach out.</p>
         <p>Best regards,</p>
-        <p><strong>CSE Alumni Community Team</strong></p>
+        <p><strong>CSE Alumni Community Team OF JKKNIU</strong></p>
       </div>
     </div>
   `;
@@ -180,7 +180,7 @@ const sendPaymentConfirmationMail = async (to, subject, paymentData) => {
           <div style="background-color: #f1f1f1; padding: 20px; text-align: center;">
             <p>If you need assistance, contact us at <a href="alumnijkkniucse@gmail.com">alumnijkkniucse@gmail.com</a>.</p>
             <p>Best regards,</p>
-            <p><strong>Your Alumni Team</strong></p>
+            <p><strong>CSE Alumni Community Team OF JKKNIU</strong></p>
           </div>
         </div>
       `;
