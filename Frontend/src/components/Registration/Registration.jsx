@@ -1089,7 +1089,8 @@ export default function Registration() {
       // Handle alumni calculations
       const numAdults = parseInt(adultCount) || 0;
       const numChildren = parseInt(childCount) || 0;
-      const totalAmount = numAdults * ADULT_FEE + numChildren * CHILD_FEE + 1000;
+      const totalAmount =
+        numAdults * ADULT_FEE + numChildren * CHILD_FEE + 1000;
       const totalCount = numAdults + numChildren;
 
       form.setValue("numberOfParticipantInfo.total", totalCount);
@@ -1415,10 +1416,17 @@ export default function Registration() {
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel>
-                            Year of Certificate Awarded
+                            <span className="hidden sm:inline">
+                              Year of Certificate Awarded
+                            </span>
+                            <span className="sm:hidden">Certificate Year</span>
                             <RequiredField value={field.value} />
                           </FormLabel>
-                          <Popover open={openPassingYear} onOpenChange={setOpenPassingYear}>
+
+                          <Popover
+                            open={openPassingYear}
+                            onOpenChange={setOpenPassingYear}
+                          >
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
@@ -1475,8 +1483,10 @@ export default function Registration() {
                               </Command>
                             </PopoverContent>
                           </Popover>
-
                           <FormMessage />
+                          <FormDescription className="sm:hidden text-xs">
+                            Year of Certificate Awarded
+                          </FormDescription>
                         </FormItem>
                       )}
                     />
@@ -2016,8 +2026,8 @@ export default function Registration() {
                           <FormItem>
                             <FormLabel>
                               {paymentMethod === "bankTransfer"
-                                ? "Sender's Account Number"
-                                : "Reference Phone Number"}
+                                ? "Sender's Account No."
+                                : "Reference Phone No."}
                               <RequiredField value={field.value} />
                             </FormLabel>
                             <FormControl>
