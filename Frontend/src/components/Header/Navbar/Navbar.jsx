@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import {
   Sheet,
@@ -11,6 +12,11 @@ import ModeToggle from "@/components/ui/mode-toggle";
 import { Menu } from "lucide-react";
 
 const Navbar = () => {
+  const [open, setOpen] = useState(false);
+
+  const handleLinkClick = () => {
+    setOpen(false);
+  };
   return (
     <nav className="p-4 bg-background/50 sticky top-0 backdrop-blur border-b z-10">
       <div className="container mx-auto flex justify-between items-center">
@@ -54,7 +60,7 @@ const Navbar = () => {
           <span className="mx-2">
             <ModeToggle />
           </span>
-          <Sheet>
+          <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger>
               <Menu />
             </SheetTrigger>
@@ -65,9 +71,15 @@ const Navbar = () => {
                 </SheetTitle>
                 <SheetDescription>
                   <div className="flex flex-col gap-6">
-                    <NavLink to="/">Home</NavLink>
-                    <NavLink to="/registration">Registration</NavLink>
-                    <NavLink to="/announcements">Announcements</NavLink>
+                    <NavLink to="/" onClick={handleLinkClick}>
+                      Home
+                    </NavLink>
+                    <NavLink to="/registration" onClick={handleLinkClick}>
+                      Registration
+                    </NavLink>
+                    <NavLink to="/announcements" onClick={handleLinkClick}>
+                      Announcements
+                    </NavLink>
                   </div>
                 </SheetDescription>
               </SheetHeader>
