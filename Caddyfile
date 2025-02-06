@@ -11,9 +11,8 @@ csealumni.jkkniu.edu.bd {
     }
 
     handle_path /admin/api/* {
-        reverse_proxy backend:4000 {
-            uri strip_prefix /admin
-        }
+        reverse_proxy backend:4000
+        rewrite * /api{path}
     }
 
     # Static files handler
@@ -24,7 +23,7 @@ csealumni.jkkniu.edu.bd {
         encode gzip
     }
 
-    # Security headers with updated CSP
+    # Security headers
     header {
         Strict-Transport-Security "max-age=31536000;"
         X-Content-Type-Options "nosniff"
