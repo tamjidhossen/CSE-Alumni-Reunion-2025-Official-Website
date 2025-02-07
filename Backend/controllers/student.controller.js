@@ -7,20 +7,17 @@ const addStudent = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
                 console.error(`Error parsing ${key}:`, error);
-                // If parsing fails, you can keep the original value or handle the error accordingly
             }
         });
-        // Parse and validate data from the request body
+
         const data = req.body;
 
         // Validate fees
         const totalFee = data.paymentInfo.totalAmount;
-        const calculatedFee = data.paymentInfo.totalAmount; // Add fee calculation logic if needed
-
+        const calculatedFee = data.paymentInfo.totalAmount; // Adjust logic if needed
         if (calculatedFee !== totalFee) {
             return res.status(400).json({
                 success: false,
@@ -30,7 +27,6 @@ const addStudent = async (req, res) => {
             });
         }
 
-        // Prepare the student data for saving
         data.paymentInfo.status = 0;
 
         const student = new Student({
@@ -40,25 +36,26 @@ const addStudent = async (req, res) => {
             profilePictureInfo: {},
         });
 
-        // Save the student data to the database
         const savedStudent = await student.save();
-        // Handle image saving after database insertion
+
+        // Securely save the profile picture
         if (req.file) {
             const uploadDir = path.join(__dirname, '../uploads/images');
-
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
-            const filename = `${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
+
+            // Generate a **random, secure filename**
+            const fileExt = path.extname(req.file.originalname);
+            const filename = `${crypto.randomBytes(16).toString('hex')}${fileExt}`;
             const filePath = path.join(uploadDir, filename);
+
             fs.writeFile(filePath, req.file.buffer, async (err) => {
                 if (err) {
-                    // Rollback database entry if file saving fails
-                    await Student.findByIdAndDelete(savedStudent._id);
+                    await Student.findByIdAndDelete(savedStudent._id); // Rollback if file saving fails
                     return res.status(500).json({ success: false, message: 'Failed to save the image' });
                 }
 
-                // Update the alumni record with the image path
                 savedStudent.profilePictureInfo.image = filename;
                 await savedStudent.save();
                 res.status(201).json({

@@ -1,31 +1,33 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const FileType = require('file-type');
 const Alumni = require('../models/alumni.model.js');
 const emailService = require('../Services/mail.service.js')
 const addAlumni = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
                 console.error(`Error parsing ${key}:`, error);
-                // If parsing fails, you can keep the original value or handle the error accordingly
             }
         });
 
         const data = req.body;
 
-        // Validate fees
+        // Validate Fees
         const adultFee = Number(process.env.ADULT_FEE);
         const childFee = Number(process.env.CHILD_FEE);
         const childCount = data.numberOfParticipantInfo.child || 0;
         const adultCount = data.numberOfParticipantInfo.adult || 0;
         const totalFee = data.paymentInfo.totalAmount;
         let calculatedFee = (childCount * childFee) + (adultCount * adultFee) + 1000;
+
         if (data.personalInfo.session === "2019-2020" || data.personalInfo.session === "2018-2019") {
             calculatedFee = 1000 * adultCount + childCount * 500;
         }
+
         if (calculatedFee !== totalFee) {
             return res.status(400).json({
                 success: false,
@@ -35,48 +37,57 @@ const addAlumni = async (req, res) => {
             });
         }
 
-        // Prepare for saving
-        data.paymentInfo.status = 0;
-
         const alumni = new Alumni({
             personalInfo: data.personalInfo,
             contactInfo: data.contactInfo,
             professionalInfo: data.professionalInfo,
             prevProfessionalInfo: data.prevProfessionalInfo,
             numberOfParticipantInfo: data.numberOfParticipantInfo,
-            paymentInfo: data.paymentInfo,
-            profilePictureInfo: {}, // Placeholder for image
+            paymentInfo: { ...data.paymentInfo, status: 0 },
+            profilePictureInfo: {},
         });
 
-        // Save the data in the database
+        // Save entry to DB first (but image is empty)
         const savedAlumni = await alumni.save();
 
-        // Handle image saving after database insertion
+        // ✅ Securely Process Image Upload
         if (req.file) {
-            const uploadDir = path.join(__dirname, '../uploads/images');
+            const fileBuffer = req.file.buffer;
+            const fileType = await FileType.fromBuffer(fileBuffer);
 
+            const allowedMimeTypes = ['image/jpeg', 'image/png'];
+            if (!fileType || !allowedMimeTypes.includes(fileType.mime)) {
+                await Alumni.findByIdAndDelete(savedAlumni._id);
+                return res.status(400).json({ success: false, message: 'Invalid file type. Only JPEG and PNG allowed.' });
+            }
+
+            const uploadDir = path.join(__dirname, '../uploads/images');
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
-            const filename = `${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
-            const filePath = path.join(uploadDir, filename);
-            fs.writeFile(filePath, req.file.buffer, async (err) => {
+
+            const fileExtension = fileType.ext;
+            const uniqueFilename = `${crypto.randomBytes(16).toString('hex')}.${fileExtension}`;
+            const filePath = path.join(uploadDir, uniqueFilename);
+
+
+            fs.writeFile(filePath, fileBuffer, async (err) => {
                 if (err) {
-                    // Rollback database entry if file saving fails
                     await Alumni.findByIdAndDelete(savedAlumni._id);
                     return res.status(500).json({ success: false, message: 'Failed to save the image' });
                 }
 
-                // Update the alumni record with the image path
-                savedAlumni.profilePictureInfo.image = filename;
+                savedAlumni.profilePictureInfo.image = uniqueFilename;
                 await savedAlumni.save();
-                res.status(201).json({
+
+                return res.status(201).json({
                     success: true,
                     message: 'Alumni Form Submission successfully',
                     data: savedAlumni,
                 });
             });
         } else {
+            await Alumni.findByIdAndDelete(savedAlumni._id);
             return res.status(400).json({ success: false, message: 'Profile picture is required' });
         }
     } catch (error) {
