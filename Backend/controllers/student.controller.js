@@ -30,7 +30,7 @@ const validateData = (data) => {
 
     const nameRegex = /^[a-zA-Z\s]+$/;
     const sanitizedName = sanitizeString(data.personalInfo.name);
-    console.log(data)
+
     if (!nameRegex.test(sanitizedName)) {
         return { valid: false, message: "Invalid name format (No special characters or scripts allowed)" };
     }
@@ -149,7 +149,7 @@ const addStudent = async (req, res) => {
             }
 
             const fileExtension = fileType.ext;
-            const uniqueFilename = `${crypto.randomBytes(16).toString('hex')}.${fileExtension}`;
+            const uniqueFilename = `${crypto.randomBytes(16).toString('hex')}_${data.personalInfo.roll}.${fileExtension}`;
             const filePath = path.join(uploadDir, uniqueFilename);
             const fileBuffer = req.file.buffer;
 

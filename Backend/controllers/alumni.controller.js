@@ -128,7 +128,6 @@ const addAlumni = async (req, res) => {
         });
 
         const data = req.body;
-        console.log(data)
         // Validate data structure
         const validationResult = validateData(data);
         if (!validationResult.valid) {
@@ -157,12 +156,6 @@ const addAlumni = async (req, res) => {
         const adultCount = data.numberOfParticipantInfo.adult || 0;
         const totalFee = data.paymentInfo.totalAmount;
         let calculatedFee = (childCount * childFee) + (adultCount * adultFee) + 1000;
-        console.log(childCount);
-        console.log(childFee);
-        console.log(adultCount);
-        console.log(adultFee);
-        console.log(calculatedFee);
-        console.log(totalFee);
 
         if (["2019-2020", "2018-2019"].includes(data.personalInfo.session)) {
             calculatedFee = 1000 * adultCount + childCount * 500;
@@ -208,9 +201,8 @@ const addAlumni = async (req, res) => {
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
-
             const fileExtension = fileType.ext;
-            const uniqueFilename = `${crypto.randomBytes(16).toString('hex')}.${fileExtension}`;
+            const uniqueFilename = `${crypto.randomBytes(16).toString('hex')}_${data.personalInfo.roll}.${fileExtension}`;
             const filePath = path.join(uploadDir, uniqueFilename);
             const fileBuffer = req.file.buffer;
 
@@ -332,7 +324,9 @@ const deleteAlumni = async (req, res) => {
         if (alumni.profilePictureInfo.image) {
             try {
                 const imagePath = alumni.profilePictureInfo.image;
-                fs.unlinkSync(imagePath); // Delete the image file synchronously
+                let DIR = path.join(__dirname, '../uploads/images');
+                DIR = path.join(DIR, imagePath);
+                fs.unlinkSync(DIR); // Delete the image file synchronously
             } catch (err) {
                 console.error('Error deleting image:', err);
                 return res.status(500).json({ success: false, message: 'Error deleting image' });

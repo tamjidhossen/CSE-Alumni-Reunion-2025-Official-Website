@@ -1,5 +1,4 @@
 const helmet = require('helmet');
-
 const dotenv = require('dotenv');
 dotenv.config();
 const express = require('express');
@@ -24,6 +23,8 @@ app.use(helmet.contentSecurityPolicy({
         scriptSrc: ["'self'"]
     }
 }));
+
+app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 // app.use('/uploads/images', express.static('uploads/images'));
 app.use('/uploads/images', express.static(path.join(__dirname, 'uploads/images')));
 app.use('/api/registration', registrationRoutes);
