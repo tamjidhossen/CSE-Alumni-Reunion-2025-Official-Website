@@ -805,23 +805,7 @@ export default function Registration() {
   // Add loading state for transaction id checking
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const sessions = [
-    {
-      label: "2023-2024",
-      value: "2023-2024",
-    },
-    {
-      label: "2022-2023",
-      value: "2022-2023",
-    },
-    {
-      label: "2021-2022",
-      value: "2021-2022",
-    },
-    {
-      label: "2020-2021",
-      value: "2020-2021",
-    },
+  const alumniSessions = [
     {
       label: "2019-2020",
       value: "2019-2020",
@@ -877,6 +861,24 @@ export default function Registration() {
     {
       label: "2006-2007",
       value: "2006-2007",
+    },
+  ];
+  const studentSessions = [
+    {
+      label: "2023-2024",
+      value: "2023-2024",
+    },
+    {
+      label: "2022-2023",
+      value: "2022-2023",
+    },
+    {
+      label: "2021-2022",
+      value: "2021-2022",
+    },
+    {
+      label: "2020-2021",
+      value: "2020-2021",
     },
   ];
   const passingYears = [
@@ -1358,7 +1360,10 @@ export default function Registration() {
                                 )}
                               >
                                 {field.value
-                                  ? sessions.find(
+                                  ? (isCurrentStudent
+                                      ? studentSessions
+                                      : alumniSessions
+                                    ).find(
                                       (session) => session.value === field.value
                                     )?.label
                                   : "Select session"}
@@ -1372,7 +1377,10 @@ export default function Registration() {
                               <CommandList>
                                 <CommandEmpty>No session found.</CommandEmpty>
                                 <CommandGroup>
-                                  {sessions.map((session) => (
+                                  {(isCurrentStudent
+                                    ? studentSessions
+                                    : alumniSessions
+                                  ).map((session) => (
                                     <CommandItem
                                       value={session.label}
                                       key={session.value}
