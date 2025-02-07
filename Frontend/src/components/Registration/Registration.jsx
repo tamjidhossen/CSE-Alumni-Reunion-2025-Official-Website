@@ -1914,6 +1914,7 @@ export default function Registration() {
                               placeholder=""
                               type="number"
                               min={1}
+                              max={10}
                               disabled={!selectedSession}
                               {...field}
                             />
@@ -1942,6 +1943,7 @@ export default function Registration() {
                               placeholder=""
                               type="number"
                               min={0}
+                              max={10}
                               disabled={!selectedSession}
                               {...field}
                             />
