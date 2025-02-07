@@ -178,11 +178,11 @@ const deleteAlumni = async (req, res) => {
         // Check if the alumni has an associated image
         if (alumni.profilePictureInfo.image) {
             try {
-                const imagePath = alumni.profilePictureInfo.image;
-                fs.unlinkSync(imagePath); // Delete the image file synchronously
+                const imagePath = path.join(__dirname, '../uploads/images', alumni.profilePictureInfo.image);
+                fs.unlinkSync(imagePath);
             } catch (err) {
                 console.error('Error deleting image:', err);
-                return res.status(500).json({ success: false, message: 'Error deleting image' });
+                // Continue with deletion even if image removal fails
             }
         }
 
