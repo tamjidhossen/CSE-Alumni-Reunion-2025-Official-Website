@@ -33,8 +33,3 @@ csealumni.jkkniu.edu.bd {
         Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; connect-src 'self' https://csealumni.jkkniu.edu.bd;"
     }
 }
-
-# Redirect www to non-www and HTTP to HTTPS
-www.csealumni.jkkniu.edu.bd {
-    redir https://csealumni.jkkniu.edu.bd{uri} permanent
-}
