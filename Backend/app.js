@@ -1,3 +1,5 @@
+const helmet = require('helmet');
+
 const dotenv = require('dotenv');
 dotenv.config();
 const express = require('express');
@@ -15,6 +17,13 @@ const paymentRoutes = require('./routes/payment.routes.js')
 const path = require('path');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
+app.use(helmet());
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"]
+    }
+}));
 // app.use('/uploads/images', express.static('uploads/images'));
 app.use('/uploads/images', express.static(path.join(__dirname, 'uploads/images')));
 app.use('/api/registration', registrationRoutes);
