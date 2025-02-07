@@ -104,7 +104,7 @@ const paymentUpdate = async (req, res) => {
             { 'paymentInfo.status': status },
             { new: true }
         );
-        emailService.sendPaymentConfirmationMail(student.contactInfo.email, "Payment Update", student)
+        emailService.sendStudentConfirmationMail(student.contactInfo.email, "Registration Confirmation", student)
         if (alumni) {
             return res.status(200).json({
                 success: true,

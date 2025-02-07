@@ -16,11 +16,6 @@ const addStudent = async (req, res) => {
         });
         // Parse and validate data from the request body
         const data = req.body;
-        // Validate transaction ID
-        // const existingStudent = await Student.findOne({ 'paymentInfo.transactionId': data.paymentInfo.transactionId });
-        // if (existingStudent) {
-        //     return res.status(400).json({ success: false, message: 'Transaction ID already exists' });
-        // }
 
         // Validate fees
         const totalFee = data.paymentInfo.totalAmount;
@@ -66,7 +61,6 @@ const addStudent = async (req, res) => {
                 // Update the alumni record with the image path
                 savedStudent.profilePictureInfo.image = filename;
                 await savedStudent.save();
-                emailService.sendStudentConfirmationMail(data.contactInfo.email, "Successfully Registered!", savedStudent);
                 res.status(201).json({
                     success: true,
                     message: 'Student registered successfully',
@@ -192,8 +186,7 @@ const paymentUpdate = async (req, res) => {
             : status === '0'
                 ? 'Not Paid'
                 : 'Rejected';
-        if (status === '1') emailService.sendPaymentConfirmationMail(student.contactInfo.email, "Payment Update", student)
-        else emailService.sendPaymentRejectionMail(student.contactInfo.email, "Payment Rejected", student)
+        if (status === '1') emailService.sendStudentConfirmationMail(student.contactInfo.email, "Registration Confirmation", student)
         res.json({
             success: true,
             message: `Payment status updated to ${statusMessage}`,
