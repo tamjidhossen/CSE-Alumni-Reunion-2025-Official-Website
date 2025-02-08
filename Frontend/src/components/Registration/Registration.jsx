@@ -1110,21 +1110,10 @@ export default function Registration() {
         : registrationApi.submitAlumniForm(values));
 
       if (response.success) {
-        // toast({
-        //   title: "Registration Complete",
-        //   description: "Your registration has been submitted successfully.",
-        // });
         setRegistrationResponse(response.data);
         form.reset();
         setShowSuccess(true);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Invalid Transaction ID",
-          description:
-            "The provided transaction ID has already been used or is invalid.",
-        });
-      }
+      } 
     } catch (error) {
       toast({
         variant: "destructive",

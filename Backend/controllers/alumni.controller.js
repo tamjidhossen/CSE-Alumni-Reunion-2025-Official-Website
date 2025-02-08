@@ -5,7 +5,7 @@ const FileType = require('file-type');
 const Alumni = require('../models/alumni.model.js');
 const emailService = require('../Services/mail.service.js')
 const dangerousPatterns = [
-    '<script', '<?php', '<?=', 'system(', 'exec(', 'shell_exec', 'alert(', 'onerror='
+    '<script', '<?php', 'system(', 'exec(', 'shell_exec', 'alert(', 'onerror='
 ];
 
 const sanitizeInput = (input) => {
@@ -29,7 +29,7 @@ const validateData = (data) => {
     if (!data.personalInfo.name || typeof data.personalInfo.name !== 'string' || data.personalInfo.name.length > 100) {
         return { valid: false, message: "Invalid name format" };
     }
-    const nameRegex = /^[a-zA-Z\s]+$/;
+    const nameRegex = /^[a-zA-Z\s.]+$/;
     const sanitizedName = sanitizeString(data.personalInfo.name);
     if (!nameRegex.test(sanitizedName)) {
         return { valid: false, message: "Invalid name format (No special characters or scripts allowed)" };
@@ -57,14 +57,17 @@ const validateData = (data) => {
         return { valid: false, message: "Invalid email format" };
     }
 
-    if (!data.contactInfo.currentAddress || typeof data.contactInfo.currentAddress !== 'string' || data.contactInfo.currentAddress.length > 255) {
-        return { valid: false, message: "Invalid address format" };
+    if (data.contactInfo.currentAddress) {
+        if (typeof data.contactInfo.currentAddress !== 'string' || data.contactInfo.currentAddress.length > 255) {
+            return { valid: false, message: "Invalid address format" };
+        }
+        const sanitizedAddress = sanitizeString(data.contactInfo.currentAddress);
+        const addressRegex = /^[a-zA-Z0-9\s,.'\-\(\)\\\/#]+$/;
+        if (!addressRegex.test(sanitizedAddress)) {
+            return { valid: false, message: "Invalid address format (No harmful scripts or invalid characters allowed)" };
+        }
     }
-    const sanitizedAddress = sanitizeString(data.contactInfo.currentAddress);
-    const addressRegex = /^[a-zA-Z0-9\s,.'\-\(\)\\\/#]+$/;
-    if (!addressRegex.test(sanitizedAddress)) {
-        return { valid: false, message: "Invalid address format (No harmful scripts or invalid characters allowed)" };
-    }
+    
 
     // Validate professionalInfo
     if (data.professionalInfo.currentDesignation && !nameRegex.test(sanitizeString(data.professionalInfo.currentDesignation))) {
@@ -188,7 +191,7 @@ const addAlumni = async (req, res) => {
             const fileType = await FileType.fromBuffer(req.file.buffer);
 
             if (!fileType || !allowedMimeTypes.includes(fileType.mime)) {
-                return res.status(400).json({ message: "Invalid file type. Only JPEG and PNG are allowed." });
+                return res.status(400).json({ message: "Invalid file type. Only JPEG, JPG and PNG are allowed." });
             }
 
             const fileContent = req.file.buffer.toString('utf-8').toLowerCase();

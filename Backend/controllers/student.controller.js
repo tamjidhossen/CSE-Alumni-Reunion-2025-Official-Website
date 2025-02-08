@@ -5,7 +5,7 @@ const FileType = require('file-type');
 const Student = require('../models/student.model.js');
 const emailService = require('../Services/mail.service.js')
 // Add new student
-const dangerousPatterns = ['<?php', '<?=', '<script', 'system(', 'exec(', 'shell_exec', 'onerror=', 'alert('];
+const dangerousPatterns = ['<?php', '<script', 'system(', 'exec(', 'shell_exec', 'onerror=', 'alert('];
 
 const sanitizeInput = (input) => {
     if (typeof input === 'string') {
@@ -28,7 +28,7 @@ const validateData = (data) => {
         return { valid: false, message: "Invalid name format" };
     }
 
-    const nameRegex = /^[a-zA-Z\s]+$/;
+    const nameRegex = /^[a-zA-Z\s.]+$/;
     const sanitizedName = sanitizeString(data.personalInfo.name);
 
     if (!nameRegex.test(sanitizedName)) {
@@ -57,13 +57,15 @@ const validateData = (data) => {
         return { valid: false, message: "Invalid email format" };
     }
 
-    if (!data.contactInfo.currentAddress || typeof data.contactInfo.currentAddress !== 'string' || data.contactInfo.currentAddress.length > 255) {
-        return { valid: false, message: "Invalid address format" };
-    }
-    const sanitizedAddress = sanitizeString(data.contactInfo.currentAddress);
-    const addressRegex = /^[a-zA-Z0-9\s,.'\-\(\)\\\/#]+$/;
-    if (!addressRegex.test(sanitizedAddress)) {
-        return { valid: false, message: "Invalid address format (No harmful scripts or invalid characters allowed)" };
+    if(data.contactInfo.permanentAddress) {
+        if (typeof data.contactInfo.currentAddress !== 'string' || data.contactInfo.currentAddress.length > 255) {
+            return { valid: false, message: "Invalid address format" };
+        }
+        const sanitizedAddress = sanitizeString(data.contactInfo.currentAddress);
+        const addressRegex = /^[a-zA-Z0-9\s,.'\-\(\)\\\/#]+$/;
+        if (!addressRegex.test(sanitizedAddress)) {
+            return { valid: false, message: "Invalid address format (No harmful scripts or invalid characters allowed)" };
+        }
     }
 
     if (!data.numberOfParticipantInfo.adult || typeof data.numberOfParticipantInfo.adult !== 'number') {
@@ -134,7 +136,7 @@ const addStudent = async (req, res) => {
             const allowedMimeTypes = ["image/jpeg", "image/png"];
             const fileType = await FileType.fromBuffer(req.file.buffer);
             if (!fileType || !allowedMimeTypes.includes(fileType.mime)) {
-                return res.status(400).json({ message: "Invalid file type. Only JPEG and PNG are allowed." });
+                return res.status(400).json({ message: "Invalid file type. Only JPEG, JPG and PNG are allowed." });
             }
 
             const fileContent = req.file.buffer.toString('utf-8').toLowerCase();
