@@ -1,36 +1,123 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const FileType = require('file-type');
 const Student = require('../models/student.model.js');
 const emailService = require('../Services/mail.service.js')
 // Add new student
+const dangerousPatterns = ['<?php', '<?=', '<script', 'system(', 'exec(', 'shell_exec', 'onerror=', 'alert('];
+
+const sanitizeInput = (input) => {
+    if (typeof input === 'string') {
+        return dangerousPatterns.some(pattern => input.toLowerCase().includes(pattern)) ? null : input.trim();
+    }
+    return input;
+};
+const sanitizeString = (str) => {
+    // Remove any HTML tags and potentially harmful characters
+    return str.replace(/<[^>]*>/g, '').replace(/[<>]/g, '').replace(/script|on\w+/gi, '');
+};
+const validateData = (data) => {
+    // Check if required fields are missing
+    if (!data.personalInfo || !data.contactInfo || !data.paymentInfo || !data.numberOfParticipantInfo) {
+        return { valid: false, message: "Missing required fields" };
+    }
+
+    // Validate personalInfo
+    if (!data.personalInfo.name || typeof data.personalInfo.name !== 'string' || data.personalInfo.name.length > 100) {
+        return { valid: false, message: "Invalid name format" };
+    }
+
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    const sanitizedName = sanitizeString(data.personalInfo.name);
+
+    if (!nameRegex.test(sanitizedName)) {
+        return { valid: false, message: "Invalid name format (No special characters or scripts allowed)" };
+    }
+
+    if (!data.personalInfo.roll || typeof data.personalInfo.roll !== 'number') {
+        return { valid: false, message: "Invalid roll number format" };
+    }
+
+    if (!data.personalInfo.registrationNo || typeof data.personalInfo.registrationNo !== 'number') {
+        return { valid: false, message: "Invalid registration number format" };
+    }
+
+    if (!data.personalInfo.session || typeof data.personalInfo.session !== 'string' || data.personalInfo.session.length > 10) {
+        return { valid: false, message: "Invalid session format" };
+    }
+
+
+    // Validate contactInfo
+    if (!data.contactInfo.mobile || !/^[0-9]{11}$/.test(data.contactInfo.mobile)) {
+        return { valid: false, message: "Invalid phone number format. Must be 11 digits." };
+    }
+
+    if (!data.contactInfo.email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(data.contactInfo.email)) {
+        return { valid: false, message: "Invalid email format" };
+    }
+
+    if (!data.contactInfo.currentAddress || typeof data.contactInfo.currentAddress !== 'string' || data.contactInfo.currentAddress.length > 255) {
+        return { valid: false, message: "Invalid address format" };
+    }
+    const sanitizedAddress = sanitizeString(data.contactInfo.currentAddress);
+    const addressRegex = /^[a-zA-Z0-9\s,.'\-\(\)\\\/#]+$/;
+    if (!addressRegex.test(sanitizedAddress)) {
+        return { valid: false, message: "Invalid address format (No harmful scripts or invalid characters allowed)" };
+    }
+
+    if (!data.numberOfParticipantInfo.adult || typeof data.numberOfParticipantInfo.adult !== 'number') {
+        return { valid: false, message: "Invalid number of adults" };
+    }
+
+    if (typeof data.numberOfParticipantInfo.child !== 'number') {
+        return { valid: false, message: "Invalid number of children" };
+    }
+
+    if (!data.numberOfParticipantInfo.total || typeof data.numberOfParticipantInfo.total !== 'number') {
+        return { valid: false, message: "Invalid total number of participants" };
+    }
+
+    // Validate paymentInfo
+    if (!data.paymentInfo.totalAmount || typeof data.paymentInfo.totalAmount !== 'number') {
+        return { valid: false, message: "Invalid total amount" };
+    }
+    return { valid: true };
+};
+
 const addStudent = async (req, res) => {
     try {
         Object.keys(req.body).forEach((key) => {
             try {
-                // Try parsing the stringified JSON fields
                 req.body[key] = JSON.parse(req.body[key]);
             } catch (error) {
                 console.error(`Error parsing ${key}:`, error);
-                // If parsing fails, you can keep the original value or handle the error accordingly
             }
         });
-        // Parse and validate data from the request body
+
         const data = req.body;
+        // Validate data
+        const validationResult = validateData(data);
 
-        // Validate fees
-        const totalFee = data.paymentInfo.totalAmount;
-        const calculatedFee = data.paymentInfo.totalAmount; // Add fee calculation logic if needed
-
-        if (calculatedFee !== totalFee) {
-            return res.status(400).json({
-                success: false,
-                message: 'Total amount is incorrect',
-                expectedFee: calculatedFee,
-                providedFee: totalFee,
-            });
+        if (!validationResult.valid) {
+            return res.status(400).json({ success: false, message: validationResult.message });
         }
 
-        // Prepare the student data for saving
+        // Sanitize inputs
+        Object.keys(data).forEach((key) => {
+            if (typeof data[key] === 'object') {
+                Object.keys(data[key]).forEach((subKey) => {
+                    data[key][subKey] = sanitizeInput(data[key][subKey]);
+                });
+            } else {
+                data[key] = sanitizeInput(data[key]);
+            }
+        });
+
+        if (Object.values(data).some(value => value === null)) {
+            return res.status(400).json({ success: false, message: "Invalid or dangerous input detected" });
+        }
+
         data.paymentInfo.status = 0;
 
         const student = new Student({
@@ -40,34 +127,49 @@ const addStudent = async (req, res) => {
             profilePictureInfo: {},
         });
 
-        // Save the student data to the database
         const savedStudent = await student.save();
-        // Handle image saving after database insertion
-        if (req.file) {
-            const uploadDir = path.join(__dirname, '../uploads/images');
 
+        // ✅ Securely Process Image Upload
+        if (req.file) {
+            const allowedMimeTypes = ["image/jpeg", "image/png"];
+            const fileType = await FileType.fromBuffer(req.file.buffer);
+            if (!fileType || !allowedMimeTypes.includes(fileType.mime)) {
+                return res.status(400).json({ message: "Invalid file type. Only JPEG and PNG are allowed." });
+            }
+
+            const fileContent = req.file.buffer.toString('utf-8').toLowerCase();
+            if (dangerousPatterns.some(pattern => fileContent.includes(pattern))) {
+                await Student.findByIdAndDelete(savedStudent._id);
+                return res.status(500).json({ success: false, message: 'Failed to save the image' });
+            }
+
+            const uploadDir = path.join(__dirname, '../uploads/images');
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
-            const filename = `${data.personalInfo.roll}_${Date.now()}-${req.file.originalname}`;
-            const filePath = path.join(uploadDir, filename);
-            fs.writeFile(filePath, req.file.buffer, async (err) => {
+
+            const fileExtension = fileType.ext;
+            const uniqueFilename = `${crypto.randomBytes(16).toString('hex')}_${data.personalInfo.roll}.${fileExtension}`;
+            const filePath = path.join(uploadDir, uniqueFilename);
+            const fileBuffer = req.file.buffer;
+
+            fs.writeFile(filePath, fileBuffer, async (err) => {
                 if (err) {
-                    // Rollback database entry if file saving fails
                     await Student.findByIdAndDelete(savedStudent._id);
                     return res.status(500).json({ success: false, message: 'Failed to save the image' });
                 }
 
-                // Update the alumni record with the image path
-                savedStudent.profilePictureInfo.image = filename;
+                savedStudent.profilePictureInfo.image = uniqueFilename;
                 await savedStudent.save();
-                res.status(201).json({
+
+                return res.status(201).json({
                     success: true,
-                    message: 'Student registered successfully',
+                    message: 'Student Form Submission successful',
                     data: savedStudent,
                 });
             });
         } else {
+            await Student.findByIdAndDelete(savedStudent._id);
             return res.status(400).json({ success: false, message: 'Profile picture is required' });
         }
     } catch (error) {
@@ -78,6 +180,7 @@ const addStudent = async (req, res) => {
         });
     }
 };
+
 
 const getStudents = async (req, res) => {
     try {
@@ -140,9 +243,11 @@ const deleteStudent = async (req, res) => {
         // Delete the profile picture if it exists
         if (student.profilePictureInfo.image) {
             try {
-                fs.unlinkSync(student.profilePictureInfo.image);
+                const imagePath = path.join(__dirname, '../uploads/images', student.profilePictureInfo.image);
+                fs.unlinkSync(imagePath);
             } catch (err) {
                 console.error('Error deleting image:', err);
+                return res.status(500).json({ success: false, message: 'Error deleting image' });
             }
         }
 

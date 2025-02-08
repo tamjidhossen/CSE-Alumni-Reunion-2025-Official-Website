@@ -967,7 +967,7 @@ export default function Registration() {
       toast({
         variant: "destructive",
         title: "Invalid file type",
-        description: "Please upload a valid image file (JPEG, PNG)",
+        description: "Please upload a valid image file (JPEG, JPG, PNG)",
       });
       return false;
     }
