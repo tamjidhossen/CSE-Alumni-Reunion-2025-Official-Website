@@ -1101,31 +1101,36 @@ export default function Registration() {
   }, [isCurrentStudent, adultCount, childCount, form, selectedSession]);
 
   async function onSubmit(values) {
-    try {
-      setIsSubmitting(true);
+    toast({
+      variant: "destructive",
+      title: "Submission Failed",
+      description: "Registration is temporarily Unavailable",
+    });
+    // try {
+    //   setIsSubmitting(true);
 
-      // Submit form based on user type
-      const response = await (isCurrentStudent
-        ? registrationApi.submitStudentForm(values)
-        : registrationApi.submitAlumniForm(values));
+    //   // Submit form based on user type
+    //   const response = await (isCurrentStudent
+    //     ? registrationApi.submitStudentForm(values)
+    //     : registrationApi.submitAlumniForm(values));
 
-      if (response.success) {
-        setRegistrationResponse(response.data);
-        form.reset();
-        setShowSuccess(true);
-      } 
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Submission Failed",
-        description:
-          error.message ||
-          "There was a problem submitting your registration. Please try again.",
-        action: <ToastAction altText="Try again">Try again</ToastAction>,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    //   if (response.success) {
+    //     setRegistrationResponse(response.data);
+    //     form.reset();
+    //     setShowSuccess(true);
+    //   }
+    // } catch (error) {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Submission Failed",
+    //     description:
+    //       error.message ||
+    //       "There was a problem submitting your registration. Please try again.",
+    //     action: <ToastAction altText="Try again">Try again</ToastAction>,
+    //   });
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   }
 
   return (
