@@ -17,6 +17,8 @@ services:
     env_file: ./Backend/.env
     volumes:
       - ../uploads/images:/app/uploads/images
+    ports:
+      - "127.0.0.1:4000:4000"
     networks:
       - reunion-network
     depends_on:
@@ -42,27 +44,9 @@ services:
     depends_on:
       - backend
 
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - frontend_build:/srv
-      - caddy_data:/data
-      - caddy_config:/config
-      - ../uploads/images:/app/uploads/images
-    networks:
-      - reunion-network
-
 volumes:
   mongo_data:
-  uploaded_images:
   frontend_build:
-  caddy_data:
-  caddy_config:
 
 networks:
   reunion-network:
