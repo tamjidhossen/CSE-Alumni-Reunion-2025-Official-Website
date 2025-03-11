@@ -1,4 +1,4 @@
-researchcenter.jkkniu.edu.bd {
+csealumni.jkkniu.edu.bd {
     # API requests handler
     handle /api/* {
         reverse_proxy backend:4000
